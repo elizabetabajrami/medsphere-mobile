@@ -30,15 +30,20 @@ export const useRegisterViewModel = () => {
     try {
       setIsLoading(true);
 
-      await authService.register({
+      const response: any = await authService.register({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
         password,
       });
 
+      if (response.verificationToken) {
+        await authService.verifyEmail(response.verificationToken);
+      }
+
       return true;
-    } catch {
+    } catch (err: any) {
+      console.log("REGISTER ERROR FULL:", err?.response?.data || err);
       setError("Unable to register. Please try again.");
       return false;
     } finally {
@@ -54,9 +59,9 @@ export const useRegisterViewModel = () => {
     email,
     setEmail,
     password,
-    setPassword,
     isLoading,
     error,
+    setPassword,
     register,
   };
 };
