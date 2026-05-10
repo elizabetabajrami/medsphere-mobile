@@ -1,7 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getUser } from '../../../storage/tokenStorage';
 
 export const usePatientHomeViewModel = () => {
-  const [patientName] = useState('Sarah');
+  const [patientName, setPatientName] = useState('Patient');
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const user = await getUser();
+      const firstName = user?.firstName?.trim();
+      const lastName = user?.lastName?.trim();
+
+      if (firstName && lastName) {
+        setPatientName(`${firstName} ${lastName}`);
+      } else {
+        setPatientName('Patient');
+      }
+    };
+
+    loadUser();
+  }, []);
+
   const [stats] = useState([
     { label: 'Heart Rate', value: '72' },
     { label: 'Steps', value: '8.5K' },
