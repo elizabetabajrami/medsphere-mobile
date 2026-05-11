@@ -5,6 +5,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList, PatientTabParamList } from '../../../navigation/types';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
+import { LoadingView } from '../../../shared/components/LoadingView';
 import type { PatientDoctor } from '../model/Patient';
 import { usePatientDoctorsViewModel } from '../viewmodel/usePatientDoctorsViewModel';
 
@@ -28,7 +30,12 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Doctors</Text>
-        {viewModel.doctors.map((doctor) => (
+        <ErrorMessage message={viewModel.error} />
+        {viewModel.isLoading && <LoadingView />}
+        {!viewModel.isLoading && !viewModel.error && viewModel.doctors.length === 0 && (
+          <Text style={styles.emptyText}>No doctors found.</Text>
+        )}
+        {!viewModel.isLoading && viewModel.doctors.map((doctor) => (
           <View key={doctor.id} style={styles.card}>
             <View style={styles.avatar}>
               <Ionicons name="person-outline" size={28} color="#6B941F" />
@@ -40,7 +47,7 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={15} color="#F5B942" />
                 <Text style={styles.rating}>{doctor.rating}</Text>
-                <Text style={styles.reviews}>({doctor.reviews} reviews)</Text>
+                <Text style={styles.reviews}>({doctor.reviews})</Text>
               </View>
             </View>
 
@@ -131,6 +138,10 @@ const styles = StyleSheet.create({
     color: '#66715E',
     fontSize: 12,
     marginLeft: 4,
+  },
+  emptyText: {
+    color: '#66715E',
+    fontSize: 14,
   },
   bookButton: {
     backgroundColor: '#6B941F',

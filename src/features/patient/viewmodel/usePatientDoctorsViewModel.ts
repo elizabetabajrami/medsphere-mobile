@@ -1,39 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PatientDoctor } from '../model/Patient';
+import { patientService } from '../service/patientService';
 
 export const usePatientDoctorsViewModel = () => {
-  const [doctors] = useState<PatientDoctor[]>([
-    {
-      id: 'doctor-1',
-      name: 'Dr. Emily Johnson',
-      specialty: 'General Practitioner',
-      rating: 4.9,
-      reviews: 124,
-    },
-    {
-      id: 'doctor-2',
-      name: 'Dr. Michael Chen',
-      specialty: 'Cardiologist',
-      rating: 4.8,
-      reviews: 98,
-    },
-    {
-      id: 'doctor-3',
-      name: 'Dr. Anna Smith',
-      specialty: 'Dermatologist',
-      rating: 4.7,
-      reviews: 87,
-    },
-    {
-      id: 'doctor-4',
-      name: 'Dr. David Wilson',
-      specialty: 'Neurologist',
-      rating: 4.9,
-      reviews: 76,
-    },
-  ]);
+  const [doctors, setDoctors] = useState<PatientDoctor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadDoctors = async () => {
+    setError(null);
+
+    try {
+      setIsLoading(true);
+      const result = await patientService.getDoctors();
+      setDoctors(result);
+    } catch {
+      setError('Unable to load doctors.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDoctors();
+  }, []);
 
   return {
     doctors,
+    isLoading,
+    error,
   };
 };
