@@ -6,6 +6,7 @@ export const useRegisterViewModel = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [personalNumber, setPersonalNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,9 +17,12 @@ export const useRegisterViewModel = () => {
       !firstName.trim() ||
       !lastName.trim() ||
       !email.trim() ||
-      !password.trim()
+      !password.trim() ||
+      !personalNumber.trim()
     ) {
-      setError("First name, last name, email, and password are required.");
+      setError(
+        "First name, last name, email, password, and personal number are required.",
+      );
       return false;
     }
 
@@ -35,15 +39,16 @@ export const useRegisterViewModel = () => {
         lastName: lastName.trim(),
         email: email.trim(),
         password,
+        personalNumber: personalNumber.trim(),
       });
 
-      if (response.verificationToken) {
-        await authService.verifyEmail(response.verificationToken);
-      }
+      console.log("REGISTER RESPONSE:", response);
 
       return true;
     } catch (err: any) {
-      console.log("REGISTER ERROR FULL:", err?.response?.data || err);
+      console.log("REGISTER ERROR STATUS:", err.response?.status);
+      console.log("REGISTER ERROR DATA:", err.response?.data);
+      console.log("REGISTER ERROR FULL:", JSON.stringify(err.response?.data));
       setError("Unable to register. Please try again.");
       return false;
     } finally {
@@ -59,6 +64,8 @@ export const useRegisterViewModel = () => {
     email,
     setEmail,
     password,
+    personalNumber,
+    setPersonalNumber,
     isLoading,
     error,
     setPassword,

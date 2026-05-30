@@ -5,6 +5,9 @@ import type { PatientDoctor } from '../features/patient/model/Patient';
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
+  VerifyEmail: {
+    email: string;
+  };
   ForgotPassword: undefined;
 };
 

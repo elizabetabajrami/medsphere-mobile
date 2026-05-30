@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -33,11 +32,7 @@ export const RegisterScreen = ({
     const isRegistered = await viewModel.register();
 
     if (isRegistered) {
-      Alert.alert(
-        "Registration successful",
-        "Your account has been created. Please sign in.",
-        [{ text: "OK", onPress: () => navigation.navigate("Login") }]
-      );
+      navigation.navigate("VerifyEmail", { email: viewModel.email.trim() });
     }
   };
 
@@ -138,6 +133,26 @@ export const RegisterScreen = ({
                   secureTextEntry
                   style={styles.input}
                   value={viewModel.password}
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Personal Number</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="card-outline"
+                  size={20}
+                  color="#8A9581"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  keyboardType="numeric"
+                  onChangeText={viewModel.setPersonalNumber}
+                  placeholder="Enter your personal number"
+                  placeholderTextColor="#A7B09E"
+                  style={styles.input}
+                  value={viewModel.personalNumber}
                 />
               </View>
             </View>

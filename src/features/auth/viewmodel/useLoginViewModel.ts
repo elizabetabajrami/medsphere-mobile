@@ -3,6 +3,16 @@ import { saveRole, saveToken, saveUser } from "../../../storage/tokenStorage";
 import type { UserRole } from "../model/AuthTypes";
 import { authService } from "../service/authService";
 
+const getLoginErrorMessage = (err: any) => {
+  const message = err.response?.data?.message;
+
+  if (typeof message === "string") {
+    return message;
+  }
+
+  return "Unable to log in. Please try again.";
+};
+
 export const useLoginViewModel = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,15 +53,25 @@ export const useLoginViewModel = () => {
       await saveToken(token);
       await saveUser(user);
 
+      try {
+        await authService.debugGetMe();
+      } catch (debugErr: any) {
+        console.log("DEBUG /api/users/me ERROR STATUS:", debugErr.response?.status);
+        console.log("DEBUG /api/users/me ERROR DATA:", debugErr.response?.data);
+      }
+
       if (role) {
         await saveRole(role);
         return role as UserRole;
       }
 
       return "Patient" as UserRole;
-    } catch (err) {
+    } catch (err: any) {
+      console.log("LOGIN ERROR STATUS:", err.response?.status);
+      console.log("LOGIN ERROR DATA:", err.response?.data);
+      console.log("LOGIN ERROR FULL:", JSON.stringify(err.response?.data));
       console.log("LOGIN ERROR:", err);
-      setError("Unable to log in. Please try again.");
+      setError(getLoginErrorMessage(err));
       return null;
     } finally {
       setIsLoading(false);

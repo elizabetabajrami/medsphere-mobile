@@ -3,6 +3,7 @@ import type { UserRole } from '../features/auth/model/AuthTypes';
 import { ForgotPasswordScreen } from '../features/auth/view/ForgotPasswordScreen';
 import { LoginScreen } from '../features/auth/view/LoginScreen';
 import { RegisterScreen } from '../features/auth/view/RegisterScreen';
+import { VerifyEmailScreen } from '../features/auth/view/VerifyEmailScreen';
 import type { AuthStackParamList } from './types';
 
 type AuthNavigatorProps = {
@@ -19,6 +20,7 @@ export const AuthNavigator = ({ onAuthenticated }: AuthNavigatorProps) => (
     <Stack.Screen name="Register">
       {(props) => <RegisterScreen {...props} onAuthenticated={onAuthenticated} />}
     </Stack.Screen>
+    <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
     <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
   </Stack.Navigator>
 );

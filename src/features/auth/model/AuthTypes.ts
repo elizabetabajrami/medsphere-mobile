@@ -12,6 +12,18 @@ export type RegisterPayload = {
   lastName: string;
   email: string;
   password: string;
+  personalNumber: string;
+};
+
+export type RegisterResponse = {
+  token?: string;
+  accessToken?: string;
+  message?: string;
+  user?: User;
+};
+
+export type VerifyEmailPayload = {
+  token: string;
 };
 
 export type AuthResponse = {

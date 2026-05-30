@@ -116,7 +116,7 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
           </View>
 
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>Don't have an account?</Text>
+            <Text style={styles.signupText}>Do not have an account?</Text>
             <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Register')}>
               <Text style={styles.signupLink}> Sign up</Text>
             </Pressable>
