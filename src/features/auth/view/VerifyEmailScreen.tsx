@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import type { AuthStackParamList } from "../../../navigation/types";
+import { AppFeedbackModal } from "../../../shared/components/AppFeedbackModal";
 import { ErrorMessage } from "../../../shared/components/ErrorMessage";
 import { useVerifyEmailViewModel } from "../viewmodel/useVerifyEmailViewModel";
 
@@ -26,16 +27,20 @@ export const VerifyEmailScreen = ({
   route,
 }: VerifyEmailScreenProps) => {
   const viewModel = useVerifyEmailViewModel();
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const { email } = route.params;
 
   const handleVerifyEmail = async () => {
     const isVerified = await viewModel.verifyEmail();
 
     if (isVerified) {
-      Alert.alert("Email verified", "Your account is active. Please sign in.", [
-        { text: "OK", onPress: () => navigation.navigate("Login") },
-      ]);
+      setIsSuccessModalVisible(true);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setIsSuccessModalVisible(false);
+    navigation.navigate("Login");
   };
 
   return (
@@ -110,6 +115,15 @@ export const VerifyEmailScreen = ({
           </View>
         </View>
       </ScrollView>
+
+      <AppFeedbackModal
+        visible={isSuccessModalVisible}
+        type="success"
+        title="Email Verified"
+        message="Your account is active. You can now sign in."
+        primaryButtonText="Sign In"
+        onClose={handleSuccessClose}
+      />
     </KeyboardAvoidingView>
   );
 };

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,6 +13,7 @@ import {
   View,
 } from "react-native";
 import type { AuthStackParamList } from "../../../navigation/types";
+import { AppFeedbackModal } from "../../../shared/components/AppFeedbackModal";
 import { ErrorMessage } from "../../../shared/components/ErrorMessage";
 import type { UserRole } from "../model/AuthTypes";
 import { useRegisterViewModel } from "../viewmodel/useRegisterViewModel";
@@ -27,13 +29,19 @@ export const RegisterScreen = ({
   navigation,
 }: RegisterScreenProps) => {
   const viewModel = useRegisterViewModel();
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
 
   const handleRegister = async () => {
     const isRegistered = await viewModel.register();
 
     if (isRegistered) {
-      navigation.navigate("VerifyEmail", { email: viewModel.email.trim() });
+      setIsSuccessModalVisible(true);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setIsSuccessModalVisible(false);
+    navigation.navigate("VerifyEmail", { email: viewModel.email.trim() });
   };
 
   return (
@@ -188,6 +196,15 @@ export const RegisterScreen = ({
           </View>
         </View>
       </ScrollView>
+
+      <AppFeedbackModal
+        visible={isSuccessModalVisible}
+        type="success"
+        title="Account Created"
+        message="Please verify your email to continue."
+        primaryButtonText="Continue"
+        onClose={handleSuccessClose}
+      />
     </KeyboardAvoidingView>
   );
 };

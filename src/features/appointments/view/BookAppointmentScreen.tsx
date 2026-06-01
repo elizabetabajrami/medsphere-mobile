@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
-import { ErrorMessage } from '../../../shared/components/ErrorMessage';
+import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import { useBookAppointmentViewModel } from '../viewmodel/useBookAppointmentViewModel';
 
 type BookAppointmentScreenProps = NativeStackScreenProps<PatientStackParamList, 'BookAppointment'>;
@@ -12,6 +13,14 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
   const { doctor } = route.params;
   const viewModel = useBookAppointmentViewModel(doctor.id);
   const timeSlots = Array.isArray(viewModel.timeSlots) ? viewModel.timeSlots : [];
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (viewModel.error) {
+      setBookingError(viewModel.error);
+    }
+  }, [viewModel.error]);
 
   const handleConfirm = async () => {
     const didBook = await viewModel.confirmBooking();
@@ -20,15 +29,14 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
       return;
     }
 
-    Alert.alert('Appointment booked successfully', '', [
-      {
-        text: 'OK',
-        onPress: () =>
-          navigation.navigate('PatientTabs', {
-            screen: 'PatientAppointments',
-          }),
-      },
-    ]);
+    setIsSuccessModalVisible(true);
+  };
+
+  const handleSuccessClose = () => {
+    setIsSuccessModalVisible(false);
+    navigation.navigate('PatientTabs', {
+      screen: 'PatientAppointments',
+    });
   };
 
   return (
@@ -107,7 +115,6 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
             );
           })}
         </View>
-        <ErrorMessage message={viewModel.error} />
       </ScrollView>
 
       <View style={styles.footer}>
@@ -125,6 +132,24 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
           </Text>
         </Pressable>
       </View>
+
+      <AppFeedbackModal
+        visible={isSuccessModalVisible}
+        type="success"
+        title="Appointment Booked"
+        message="Your appointment request has been submitted successfully."
+        primaryButtonText="View Appointments"
+        onClose={handleSuccessClose}
+      />
+
+      <AppFeedbackModal
+        visible={Boolean(bookingError)}
+        type="error"
+        title="Booking Failed"
+        message={bookingError || ''}
+        primaryButtonText="Try Again"
+        onClose={() => setBookingError(null)}
+      />
     </SafeAreaView>
   );
 };
