@@ -2,9 +2,9 @@ import type { PatientAppointment } from '../model/Appointment';
 
 export const useAppointmentDetailsViewModel = (appointment: PatientAppointment) => {
   const details = {
-    location: 'MedSphere Clinic',
-    type: 'In-person visit',
-    notes: 'Please arrive 10 minutes early.',
+    location: appointment.location || 'Location pending',
+    type: appointment.type || 'Healthcare visit',
+    notes: appointment.notes || 'No notes added.',
   };
 
   return {

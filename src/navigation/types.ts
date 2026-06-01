@@ -3,6 +3,8 @@ import type { PatientAppointment } from '../features/appointments/model/Appointm
 import type { PatientDoctor } from '../features/patient/model/Patient';
 
 export type AuthStackParamList = {
+  Splash: undefined;
+  Landing: undefined;
   Login: undefined;
   Register: undefined;
   VerifyEmail: {

@@ -1,4 +1,12 @@
-export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type AppointmentStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'cancelled'
+  | 'completed'
+  | 'SCHEDULED'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'COMPLETED';
 
 export type Appointment = {
   id: string;
@@ -10,10 +18,17 @@ export type Appointment = {
 };
 
 export type BookAppointmentPayload = {
-  patientId: string;
   doctorId: string;
   date: string;
   reason: string;
+};
+
+export type AvailableSlot = {
+  start: string;
+  end: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
 };
 
 export type PatientAppointment = {
@@ -22,5 +37,8 @@ export type PatientAppointment = {
   specialty: string;
   date: string;
   time: string;
-  status: 'Confirmed';
+  status: string;
+  location?: string;
+  type?: string;
+  notes?: string;
 };

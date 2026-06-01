@@ -1,4 +1,4 @@
-import { apiClient } from '../../../network/apiClient';
+import { apiClient, coreApiClient } from '../../../network/apiClient';
 import { endpoints } from '../../../network/endpoints';
 import type { Appointment } from '../../appointments/model/Appointment';
 import type { Doctor } from '../model/Doctor';
@@ -10,7 +10,7 @@ export const doctorService = {
   },
 
   async getAppointmentDetails(appointmentId: string): Promise<Appointment> {
-    const response = await apiClient.get<Appointment>(endpoints.appointments.byId(appointmentId));
+    const response = await coreApiClient.get<Appointment>(endpoints.appointments.byId(appointmentId));
     return response.data;
   },
 };

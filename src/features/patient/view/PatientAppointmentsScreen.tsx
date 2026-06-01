@@ -1,10 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { CompositeScreenProps } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList, PatientTabParamList } from '../../../navigation/types';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
+import { LoadingView } from '../../../shared/components/LoadingView';
 import { usePatientAppointmentsViewModel } from '../viewmodel/usePatientAppointmentsViewModel';
 
 type PatientAppointmentsScreenProps = CompositeScreenProps<
@@ -14,6 +18,13 @@ type PatientAppointmentsScreenProps = CompositeScreenProps<
 
 export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScreenProps) => {
   const viewModel = usePatientAppointmentsViewModel();
+  const { loadAppointments } = viewModel;
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAppointments();
+    }, [loadAppointments])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -23,12 +34,16 @@ export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScr
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Upcoming Appointments</Text>
+        <ErrorMessage message={viewModel.error} />
+        {viewModel.isLoading && <LoadingView />}
 
-        {viewModel.appointments.length === 0 ? (
+        {!viewModel.isLoading && !viewModel.error && viewModel.appointments.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyText}>No appointments yet</Text>
           </View>
-        ) : (
+        ) : null}
+
+        {!viewModel.isLoading && !viewModel.error ? (
           viewModel.appointments.map((appointment) => (
             <View key={appointment.id} style={styles.card}>
               <View style={styles.cardHeader}>
@@ -64,7 +79,7 @@ export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScr
               </Pressable>
             </View>
           ))
-        )}
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

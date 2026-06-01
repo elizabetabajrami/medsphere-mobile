@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosInstance } from "axios";
 import { getToken } from "../storage/tokenStorage";
 
 declare module "axios" {
@@ -11,45 +12,68 @@ declare module "axios" {
   }
 }
 
+const AUTH_BASE_URL = "http://192.168.178.143:3005";
+const CORE_BASE_URL = "http://192.168.178.143:3007";
+
 export const apiClient = axios.create({
-  baseURL: "http://192.168.178.143:3005",
+  baseURL: AUTH_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-console.log("API BASE URL:", apiClient.defaults.baseURL);
-
-apiClient.interceptors.request.use(async (config) => {
-  if (config.skipAuth) {
-    delete config.headers.Authorization;
-    return config;
-  }
-
-  const token = await getToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
+export const coreApiClient = axios.create({
+  baseURL: CORE_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-apiClient.interceptors.response.use(
-  (response) => {
-    console.log("API RESPONSE URL:", response.config.url);
-    console.log("API RESPONSE STATUS:", response.status);
-    console.log("STATUS:", response.status);
-    return response;
-  },
-  (error) => {
-    console.log("API RESPONSE URL:", error.response?.config?.url);
-    console.log("API RESPONSE STATUS:", error.response?.status);
-    console.log("STATUS:", error.response?.status);
-    return Promise.reject(error);
-  },
-);
+const configureClient = (client: AxiosInstance, label: string) => {
+  console.log(`${label} BASE URL:`, client.defaults.baseURL);
+
+  client.interceptors.request.use(async (config) => {
+    if (config.skipAuth) {
+      delete config.headers.Authorization;
+      return config;
+    }
+
+    const token = await getToken();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  });
+
+  client.interceptors.response.use(
+    (response) => {
+      console.log(`${label} RESPONSE URL:`, response.config.url);
+      console.log(`${label} RESPONSE STATUS:`, response.status);
+      console.log("STATUS:", response.status);
+      return response;
+    },
+    (error) => {
+      console.log(`${label} ERROR MESSAGE:`, error.message);
+      console.log(`${label} ERROR CODE:`, error.code);
+      console.log(`${label} REQUEST BASE URL:`, error.config?.baseURL);
+      console.log(`${label} REQUEST URL:`, error.config?.url);
+      console.log(`${label} RESPONSE URL:`, error.response?.config?.url);
+      console.log(`${label} RESPONSE STATUS:`, error.response?.status);
+      console.log(`${label} RESPONSE DATA:`, error.response?.data);
+      console.log(`${label} REQUEST METHOD:`, error.config?.method);
+      console.log(`${label} REQUEST DATA:`, error.config?.data);
+      console.log("STATUS:", error.response?.status);
+      return Promise.reject(error);
+    },
+  );
+};
+
+configureClient(apiClient, "AUTH API");
+configureClient(coreApiClient, "CORE API");
 
 apiClient
   .get("/health", { skipAuth: true })

@@ -3,16 +3,20 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { useBookAppointmentViewModel } from '../viewmodel/useBookAppointmentViewModel';
 
 type BookAppointmentScreenProps = NativeStackScreenProps<PatientStackParamList, 'BookAppointment'>;
 
 export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScreenProps) => {
-  const viewModel = useBookAppointmentViewModel();
   const { doctor } = route.params;
+  const viewModel = useBookAppointmentViewModel(doctor.id);
+  const timeSlots = Array.isArray(viewModel.timeSlots) ? viewModel.timeSlots : [];
 
-  const handleConfirm = () => {
-    if (!viewModel.confirmBooking()) {
+  const handleConfirm = async () => {
+    const didBook = await viewModel.confirmBooking();
+
+    if (!didBook) {
       return;
     }
 
@@ -81,32 +85,44 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
         </ScrollView>
 
         <Text style={styles.sectionTitle}>Select Time</Text>
+        {viewModel.isLoadingSlots ? <Text style={styles.emptyText}>Loading available times...</Text> : null}
+        {!viewModel.isLoadingSlots && viewModel.selectedDate && timeSlots.length === 0 ? (
+          <Text style={styles.emptyText}>No available times for this date.</Text>
+        ) : null}
         <View style={styles.timeGrid}>
-          {viewModel.timeSlots.map((time) => {
-            const isSelected = viewModel.selectedTime === time;
+          {timeSlots.map((slot) => {
+            const isSelected = viewModel.selectedTime === slot.start;
 
             return (
               <Pressable
-                key={time}
+                key={slot.start}
                 accessibilityRole="button"
-                onPress={() => viewModel.setSelectedTime(time)}
+                onPress={() => viewModel.setSelectedTime(slot.start)}
                 style={[styles.timeSlot, isSelected && styles.selectedOption]}
               >
-                <Text style={[styles.timeText, isSelected && styles.selectedText]}>{time}</Text>
+                <Text style={[styles.timeText, isSelected && styles.selectedText]}>
+                  {slot.startTime}
+                </Text>
               </Pressable>
             );
           })}
         </View>
+        <ErrorMessage message={viewModel.error} />
       </ScrollView>
 
       <View style={styles.footer}>
         <Pressable
           accessibilityRole="button"
-          disabled={!viewModel.canConfirm}
+          disabled={!viewModel.canConfirm || viewModel.isLoading}
           onPress={handleConfirm}
-          style={[styles.confirmButton, !viewModel.canConfirm && styles.confirmButtonDisabled]}
+          style={[
+            styles.confirmButton,
+            (!viewModel.canConfirm || viewModel.isLoading) && styles.confirmButtonDisabled,
+          ]}
         >
-          <Text style={styles.confirmButtonText}>Confirm Booking</Text>
+          <Text style={styles.confirmButtonText}>
+            {viewModel.isLoading ? 'Booking...' : 'Confirm Booking'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -257,6 +273,11 @@ const styles = StyleSheet.create({
     color: '#303A28',
     fontSize: 14,
     fontWeight: '800',
+  },
+  emptyText: {
+    color: '#66715E',
+    fontSize: 14,
+    marginBottom: 12,
   },
   footer: {
     position: 'absolute',
