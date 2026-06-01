@@ -3,10 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppointmentDetailsScreen } from '../features/appointments/view/AppointmentDetailsScreen';
 import { BookAppointmentScreen } from '../features/appointments/view/BookAppointmentScreen';
+import { DoctorDetailsScreen } from '../features/patient/view/DoctorDetailsScreen';
 import { PatientAppointmentsScreen } from '../features/patient/view/PatientAppointmentsScreen';
 import { PatientDoctorsScreen } from '../features/patient/view/PatientDoctorsScreen';
 import { PatientHomeScreen } from '../features/patient/view/PatientHomeScreen';
 import { PatientProfileScreen } from '../features/patient/view/PatientProfileScreen';
+import { ProfileEditScreen } from '../features/patient/view/ProfileEditScreen';
 import type { PatientStackParamList, PatientTabParamList } from './types';
 
 const Stack = createNativeStackNavigator<PatientStackParamList>();
@@ -63,7 +65,9 @@ export const PatientNavigator = ({ onLogout }: PatientNavigatorProps) => (
     <Stack.Screen name="PatientTabs" options={{ headerShown: false }}>
       {() => <PatientTabs onLogout={onLogout} />}
     </Stack.Screen>
+    <Stack.Screen name="DoctorDetails" component={DoctorDetailsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );

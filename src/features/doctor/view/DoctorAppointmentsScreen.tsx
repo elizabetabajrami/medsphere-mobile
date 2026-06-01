@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import type { DoctorStackParamList } from '../../../navigation/types';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { LoadingView } from '../../../shared/components/LoadingView';
 import { useDoctorAppointmentsViewModel } from '../viewmodel/useDoctorAppointmentsViewModel';
@@ -15,6 +16,7 @@ export const DoctorAppointmentsScreen = ({ navigation }: DoctorAppointmentsScree
 
   return (
     <View style={styles.container}>
+      <AppHeader title="Appointments" showBack onBackPress={() => navigation.navigate('DoctorHome')} />
       <Text style={styles.title}>Doctor Appointments</Text>
       <ErrorMessage message={viewModel.error} />
       {viewModel.isLoading && <LoadingView />}
@@ -31,8 +33,9 @@ export const DoctorAppointmentsScreen = ({ navigation }: DoctorAppointmentsScree
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 24,
+    backgroundColor: '#F8FAF5',
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   title: {
     fontSize: 22,

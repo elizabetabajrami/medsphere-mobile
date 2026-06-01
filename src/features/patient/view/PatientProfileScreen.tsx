@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { PatientStackParamList } from '../../../navigation/types';
 import { usePatientProfileViewModel } from '../viewmodel/usePatientProfileViewModel';
 
 type PatientProfileScreenProps = {
@@ -8,6 +11,7 @@ type PatientProfileScreenProps = {
 };
 
 export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) => {
+  const navigation = useNavigation<NativeStackNavigationProp<PatientStackParamList>>();
   const viewModel = usePatientProfileViewModel();
   const { profile } = viewModel;
 
@@ -49,7 +53,11 @@ export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) =>
           </View>
         </View>
 
-        <Pressable accessibilityRole="button" style={styles.editButton}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('ProfileEdit')}
+          style={styles.editButton}
+        >
           <Text style={styles.editButtonText}>Edit Profile</Text>
         </Pressable>
 

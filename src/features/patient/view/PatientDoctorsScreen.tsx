@@ -19,7 +19,7 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
   const viewModel = usePatientDoctorsViewModel();
 
   const handleBook = (doctor: PatientDoctor) => {
-    navigation.navigate('BookAppointment', { doctor });
+    navigation.navigate('DoctorDetails', { doctor });
   };
 
   return (
@@ -56,7 +56,7 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
               onPress={() => handleBook(doctor)}
               style={({ pressed }) => [styles.bookButton, pressed && styles.bookButtonPressed]}
             >
-              <Text style={styles.bookButtonText}>Book</Text>
+              <Text style={styles.bookButtonText}>View</Text>
             </Pressable>
           </View>
         ))}

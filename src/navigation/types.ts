@@ -9,18 +9,23 @@ export type AuthStackParamList = {
   Register: undefined;
   VerifyEmail: {
     email: string;
+    from?: 'Register' | 'Login';
   };
   ForgotPassword: undefined;
 };
 
 export type PatientStackParamList = {
   PatientTabs: NavigatorScreenParams<PatientTabParamList> | undefined;
+  DoctorDetails: {
+    doctor: PatientDoctor;
+  };
   BookAppointment: {
     doctor: PatientDoctor;
   };
   AppointmentDetails: {
     appointment: PatientAppointment;
   };
+  ProfileEdit: undefined;
 };
 
 export type PatientTabParamList = {

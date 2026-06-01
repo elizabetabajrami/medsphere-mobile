@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import type { AuthStackParamList } from '../../../navigation/types';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { authService } from '../service/authService';
 
@@ -49,6 +50,7 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardView}
     >
+      <AppHeader title="Reset Password" showBack onBackPress={() => navigation.navigate('Login')} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -100,14 +102,6 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
               )}
             </Pressable>
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.backButton}
-          >
-            <Text style={styles.footerLink}>Back to Sign in</Text>
-          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -218,14 +212,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
-  },
-  backButton: {
-    marginTop: 24,
-  },
-  footerLink: {
-    color: '#6B941F',
-    fontSize: 14,
     fontWeight: '800',
   },
 });

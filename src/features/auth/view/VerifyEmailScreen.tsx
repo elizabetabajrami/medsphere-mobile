@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import type { AuthStackParamList } from "../../../navigation/types";
+import { AppHeader } from "../../../shared/components/AppHeader";
 import { AppFeedbackModal } from "../../../shared/components/AppFeedbackModal";
 import { ErrorMessage } from "../../../shared/components/ErrorMessage";
 import { useVerifyEmailViewModel } from "../viewmodel/useVerifyEmailViewModel";
@@ -43,11 +44,16 @@ export const VerifyEmailScreen = ({
     navigation.navigate("Login");
   };
 
+  const handleBack = () => {
+    navigation.navigate(route.params.from === "Register" ? "Register" : "Login");
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardView}
     >
+      <AppHeader title="Verify Email" showBack onBackPress={handleBack} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

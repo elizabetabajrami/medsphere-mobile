@@ -15,16 +15,15 @@ type AuthNavigatorProps = {
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export const AuthNavigator = ({ onAuthenticated }: AuthNavigatorProps) => (
-  <Stack.Navigator initialRouteName="Splash">
+  <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
     <Stack.Screen
       name="Splash"
       component={SplashScreen}
-      options={{ headerShown: false }}
     />
     <Stack.Screen
       name="Landing"
       component={LandingScreen}
-      options={{ animation: 'slide_from_right', headerShown: false }}
+      options={{ animation: 'slide_from_right' }}
     />
     <Stack.Screen name="Login">
       {(props) => <LoginScreen {...props} onAuthenticated={onAuthenticated} />}

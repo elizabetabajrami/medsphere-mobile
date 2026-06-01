@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import { useBookAppointmentViewModel } from '../viewmodel/useBookAppointmentViewModel';
 
@@ -40,18 +41,12 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={24} color="#303A28" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Book Appointment</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <AppHeader
+        title="Book Appointment"
+        showBack
+        onBackPress={() => navigation.navigate('DoctorDetails', { doctor })}
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -162,32 +157,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#F8FAF5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8EEDF',
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  headerTitle: {
-    color: '#303A28',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  headerSpacer: {
-    width: 42,
   },
   scrollView: {
     flex: 1,

@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { useAppointmentDetailsViewModel } from '../viewmodel/useAppointmentDetailsViewModel';
 
 type AppointmentDetailsScreenProps = NativeStackScreenProps<
@@ -15,18 +16,12 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
   const { appointment, details } = viewModel;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={24} color="#303A28" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Appointment Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <AppHeader
+        title="Appointment Details"
+        showBack
+        onBackPress={() => navigation.navigate('PatientTabs', { screen: 'PatientAppointments' })}
+      />
 
       <ScrollView
         style={styles.screen}
@@ -104,34 +99,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#F8FAF5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8EEDF',
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  headerTitle: {
-    color: '#303A28',
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 42,
   },
   content: {
     paddingHorizontal: 20,

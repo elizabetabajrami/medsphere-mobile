@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import type { UserRole } from '../model/AuthTypes';
 import { useLoginViewModel } from '../viewmodel/useLoginViewModel';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import type { AuthStackParamList } from '../../../navigation/types';
 
@@ -44,6 +45,7 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardView}
     >
+      <AppHeader title="Sign In" showBack onBackPress={() => navigation.navigate('Landing')} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

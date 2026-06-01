@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import type { AuthStackParamList } from "../../../navigation/types";
+import { AppHeader } from "../../../shared/components/AppHeader";
 import { AppFeedbackModal } from "../../../shared/components/AppFeedbackModal";
 import { ErrorMessage } from "../../../shared/components/ErrorMessage";
 import type { UserRole } from "../model/AuthTypes";
@@ -41,7 +42,7 @@ export const RegisterScreen = ({
 
   const handleSuccessClose = () => {
     setIsSuccessModalVisible(false);
-    navigation.navigate("VerifyEmail", { email: viewModel.email.trim() });
+    navigation.navigate("VerifyEmail", { email: viewModel.email.trim(), from: "Register" });
   };
 
   return (
@@ -49,6 +50,7 @@ export const RegisterScreen = ({
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardView}
     >
+      <AppHeader title="Create Account" showBack onBackPress={() => navigation.navigate("Landing")} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
