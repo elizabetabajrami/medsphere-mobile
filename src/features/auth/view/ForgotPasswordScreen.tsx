@@ -37,7 +37,7 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
     try {
       setIsLoading(true);
       await authService.forgotPassword(email.trim());
-      setMessage('Password reset request sent.');
+      setMessage('Password reset code sent. Check your email and paste the code here.');
     } catch {
       setError('Unable to send password reset request.');
     } finally {
@@ -45,12 +45,21 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
     }
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('Login');
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardView}
     >
-      <AppHeader title="Reset Password" showBack onBackPress={() => navigation.navigate('Login')} />
+      <AppHeader title="Reset Password" showBack onBackPress={handleBack} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -98,8 +107,16 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.primaryButtonText}>Send reset link</Text>
+                <Text style={styles.primaryButtonText}>Send Reset Code</Text>
               )}
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('ResetPassword', {})}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>I have a reset code</Text>
             </Pressable>
           </View>
         </View>
@@ -212,6 +229,17 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '800',
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    marginTop: 14,
+  },
+  secondaryButtonText: {
+    color: '#6B941F',
+    fontSize: 14,
     fontWeight: '800',
   },
 });

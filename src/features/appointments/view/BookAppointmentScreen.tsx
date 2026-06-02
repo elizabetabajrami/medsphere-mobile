@@ -11,11 +11,29 @@ import { useBookAppointmentViewModel } from '../viewmodel/useBookAppointmentView
 type BookAppointmentScreenProps = NativeStackScreenProps<PatientStackParamList, 'BookAppointment'>;
 
 export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScreenProps) => {
-  const { doctor } = route.params;
-  const viewModel = useBookAppointmentViewModel(doctor.id);
+  const { appointment, doctor } = route.params;
+  const isRescheduling = Boolean(appointment);
+  const viewModel = useBookAppointmentViewModel(doctor.id, {
+    appointmentId: appointment?.id,
+    mode: isRescheduling ? 'reschedule' : 'book',
+  });
   const timeSlots = Array.isArray(viewModel.timeSlots) ? viewModel.timeSlots : [];
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    if (appointment) {
+      navigation.navigate('AppointmentDetails', { appointment });
+      return;
+    }
+
+    navigation.navigate('DoctorDetails', { doctor });
+  };
 
   useEffect(() => {
     if (viewModel.error) {
@@ -43,9 +61,9 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <AppHeader
-        title="Book Appointment"
+        title={isRescheduling ? 'Reschedule' : 'Book Appointment'}
         showBack
-        onBackPress={() => navigation.navigate('DoctorDetails', { doctor })}
+        onBackPress={handleBack}
       />
 
       <ScrollView
@@ -123,7 +141,9 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
           ]}
         >
           <Text style={styles.confirmButtonText}>
-            {viewModel.isLoading ? 'Booking...' : 'Confirm Booking'}
+            {viewModel.isLoading
+              ? isRescheduling ? 'Rescheduling...' : 'Booking...'
+              : isRescheduling ? 'Confirm Reschedule' : 'Confirm Booking'}
           </Text>
         </Pressable>
       </View>
@@ -131,8 +151,12 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
       <AppFeedbackModal
         visible={isSuccessModalVisible}
         type="success"
-        title="Appointment Booked"
-        message="Your appointment request has been submitted successfully."
+        title={isRescheduling ? 'Appointment Rescheduled' : 'Appointment Booked'}
+        message={
+          isRescheduling
+            ? 'Your appointment time has been updated successfully.'
+            : 'Your appointment request has been submitted successfully.'
+        }
         primaryButtonText="View Appointments"
         onClose={handleSuccessClose}
       />
@@ -140,7 +164,7 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
       <AppFeedbackModal
         visible={Boolean(bookingError)}
         type="error"
-        title="Booking Failed"
+        title={isRescheduling ? 'Reschedule Failed' : 'Booking Failed'}
         message={bookingError || ''}
         primaryButtonText="Try Again"
         onClose={() => setBookingError(null)}

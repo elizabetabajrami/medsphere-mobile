@@ -119,7 +119,15 @@ const ensurePatientProfile = async () => {
   }
 };
 
-export const useBookAppointmentViewModel = (doctorId: string) => {
+type BookingMode = 'book' | 'reschedule';
+
+export const useBookAppointmentViewModel = (
+  doctorId: string,
+  options?: {
+    appointmentId?: string;
+    mode?: BookingMode;
+  },
+) => {
   const [dateOptions] = useState(createDateOptions);
   const [timeSlots, setTimeSlots] = useState<AvailableSlot[]>([]);
   const [selectedDate, setSelectedDate] = useState(dateOptions[0]?.id || '');
@@ -129,6 +137,7 @@ export const useBookAppointmentViewModel = (doctorId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const canConfirm = Boolean(selectedDate && selectedTime) && !isLoadingSlots;
+  const mode = options?.mode || 'book';
 
   useEffect(() => {
     const loadAvailableSlots = async () => {
@@ -165,6 +174,15 @@ export const useBookAppointmentViewModel = (doctorId: string) => {
       setIsLoading(true);
       setError(null);
 
+      if (mode === 'reschedule' && options?.appointmentId) {
+        await appointmentService.rescheduleAppointment(options.appointmentId, {
+          doctorId,
+          date: selectedTime,
+        });
+
+        return true;
+      }
+
       await ensurePatientProfile();
 
       await appointmentService.bookAppointment({
@@ -183,6 +201,7 @@ export const useBookAppointmentViewModel = (doctorId: string) => {
   };
 
   return {
+    mode,
     dateOptions,
     timeSlots,
     selectedDate,

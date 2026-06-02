@@ -20,6 +20,7 @@ type PatientNavigatorProps = {
 
 const PatientTabs = ({ onLogout }: PatientNavigatorProps) => (
   <Tab.Navigator
+    backBehavior="history"
     screenOptions={({ route }) => ({
       headerShown: false,
       tabBarActiveTintColor: '#6B941F',
@@ -61,13 +62,21 @@ const PatientTabs = ({ onLogout }: PatientNavigatorProps) => (
 );
 
 export const PatientNavigator = ({ onLogout }: PatientNavigatorProps) => (
-  <Stack.Navigator initialRouteName="PatientTabs">
-    <Stack.Screen name="PatientTabs" options={{ headerShown: false }}>
+  <Stack.Navigator
+    initialRouteName="PatientTabs"
+    screenOptions={{
+      animation: 'slide_from_right',
+      fullScreenGestureEnabled: true,
+      gestureEnabled: true,
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen name="PatientTabs">
       {() => <PatientTabs onLogout={onLogout} />}
     </Stack.Screen>
-    <Stack.Screen name="DoctorDetails" component={DoctorDetailsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="DoctorDetails" component={DoctorDetailsScreen} />
+    <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} />
+    <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} />
+    <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
   </Stack.Navigator>
 );

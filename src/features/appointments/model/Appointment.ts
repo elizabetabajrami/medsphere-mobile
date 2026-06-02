@@ -23,6 +23,11 @@ export type BookAppointmentPayload = {
   reason: string;
 };
 
+export type RescheduleAppointmentPayload = {
+  doctorId: string;
+  date: string;
+};
+
 export type AvailableSlot = {
   start: string;
   end: string;
@@ -33,6 +38,7 @@ export type AvailableSlot = {
 
 export type PatientAppointment = {
   id: string;
+  doctorId: string;
   doctorName: string;
   specialty: string;
   date: string;

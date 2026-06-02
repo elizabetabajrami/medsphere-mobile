@@ -5,6 +5,7 @@ import { getUser } from '../../../storage/tokenStorage';
 
 type AppointmentResponse = Appointment & {
   _id?: string;
+  doctorId?: string;
   appointmentDate?: string;
   scheduledAt?: string;
   start?: string;
@@ -16,6 +17,8 @@ type AppointmentResponse = Appointment & {
   type?: string;
   notes?: string;
   doctor?: {
+    id?: string;
+    _id?: string;
     name?: string;
     fullName?: string;
     firstName?: string;
@@ -97,6 +100,7 @@ const getAppointmentDate = (appointment: AppointmentResponse) =>
 
 const mapAppointment = (appointment: AppointmentResponse): PatientAppointment => ({
   id: appointment.id || appointment._id || getAppointmentDate(appointment) || `${Date.now()}`,
+  doctorId: appointment.doctorId || appointment.doctor?.id || appointment.doctor?._id || '',
   doctorName: getDoctorName(appointment),
   specialty: appointment.specialty || appointment.doctor?.specialty || 'Healthcare visit',
   date: formatDate(getAppointmentDate(appointment)),

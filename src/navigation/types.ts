@@ -12,6 +12,9 @@ export type AuthStackParamList = {
     from?: 'Register' | 'Login';
   };
   ForgotPassword: undefined;
+  ResetPassword: {
+    token?: string;
+  };
 };
 
 export type PatientStackParamList = {
@@ -21,6 +24,7 @@ export type PatientStackParamList = {
   };
   BookAppointment: {
     doctor: PatientDoctor;
+    appointment?: PatientAppointment;
   };
   AppointmentDetails: {
     appointment: PatientAppointment;

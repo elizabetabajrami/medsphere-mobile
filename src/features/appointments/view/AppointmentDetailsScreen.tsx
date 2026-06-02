@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
+import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import { AppHeader } from '../../../shared/components/AppHeader';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { useAppointmentDetailsViewModel } from '../viewmodel/useAppointmentDetailsViewModel';
 
 type AppointmentDetailsScreenProps = NativeStackScreenProps<
@@ -14,13 +17,57 @@ type AppointmentDetailsScreenProps = NativeStackScreenProps<
 export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetailsScreenProps) => {
   const viewModel = useAppointmentDetailsViewModel(route.params.appointment);
   const { appointment, details } = viewModel;
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('PatientTabs', { screen: 'PatientAppointments' });
+  };
+
+  const handleReschedule = () => {
+    if (!viewModel.canChangeAppointment || !appointment.doctorId) {
+      return;
+    }
+
+    navigation.navigate('BookAppointment', {
+      appointment,
+      doctor: {
+        id: appointment.doctorId,
+        name: appointment.doctorName,
+        specialty: appointment.specialty,
+        rating: '4.8',
+        reviews: '120 reviews',
+      },
+    });
+  };
+
+  const handleCancel = () => {
+    if (!viewModel.canChangeAppointment) {
+      return;
+    }
+
+    setIsCancelModalVisible(true);
+  };
+
+  const confirmCancel = async () => {
+    const didCancel = await viewModel.cancelAppointment();
+
+    if (didCancel) {
+      setIsCancelModalVisible(false);
+      navigation.navigate('PatientTabs', { screen: 'PatientAppointments' });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <AppHeader
         title="Appointment Details"
         showBack
-        onBackPress={() => navigation.navigate('PatientTabs', { screen: 'PatientAppointments' })}
+        onBackPress={handleBack}
       />
 
       <ScrollView
@@ -28,6 +75,7 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <ErrorMessage message={viewModel.error} />
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.avatar}>
@@ -62,13 +110,43 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
           <InfoItem label="Notes" value={details.notes} icon="document-text-outline" />
         </View>
 
-        <Pressable accessibilityRole="button" style={styles.rescheduleButton}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!viewModel.canChangeAppointment || !appointment.doctorId}
+          onPress={handleReschedule}
+          style={[
+            styles.rescheduleButton,
+            (!viewModel.canChangeAppointment || !appointment.doctorId) && styles.actionButtonDisabled,
+          ]}
+        >
           <Text style={styles.rescheduleButtonText}>Reschedule</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" style={styles.cancelButton}>
-          <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!viewModel.canChangeAppointment || viewModel.isCancelling}
+          onPress={handleCancel}
+          style={[
+            styles.cancelButton,
+            (!viewModel.canChangeAppointment || viewModel.isCancelling) && styles.actionButtonDisabled,
+          ]}
+        >
+          <Text style={styles.cancelButtonText}>
+            {viewModel.isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+          </Text>
         </Pressable>
       </ScrollView>
+
+      <AppFeedbackModal
+        visible={isCancelModalVisible}
+        type="error"
+        title="Cancel appointment?"
+        message="This appointment will be marked as cancelled."
+        primaryButtonText={viewModel.isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+        primaryButtonDisabled={viewModel.isCancelling}
+        secondaryButtonText="Keep Appointment"
+        onPrimaryPress={confirmCancel}
+        onClose={() => setIsCancelModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -225,5 +303,8 @@ const styles = StyleSheet.create({
     color: '#B42318',
     fontSize: 15,
     fontWeight: '800',
+  },
+  actionButtonDisabled: {
+    opacity: 0.55,
   },
 });

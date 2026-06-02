@@ -5,6 +5,15 @@ import { AuthNavigator } from "./AuthNavigator";
 import { DoctorNavigator } from "./DoctorNavigator";
 import { PatientNavigator } from "./PatientNavigator";
 
+const linking = {
+  prefixes: ["medspheremobile://"],
+  config: {
+    screens: {
+      ResetPassword: "reset-password",
+    },
+  },
+};
+
 export const AppNavigator = () => {
   const [role, setRole] = useState<UserRole | string | null>(null);
 
@@ -19,7 +28,7 @@ export const AppNavigator = () => {
   const normalizedRole = role?.toLowerCase();
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {!role ? (
         <AuthNavigator onAuthenticated={handleAuthenticated} />
       ) : normalizedRole === "doctor" ? (

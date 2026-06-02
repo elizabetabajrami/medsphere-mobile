@@ -5,6 +5,7 @@ import type {
   LoginCredentials,
   RegisterPayload,
   RegisterResponse,
+  ResetPasswordPayload,
   VerifyEmailPayload,
 } from "../model/AuthTypes";
 
@@ -56,6 +57,17 @@ export const authService = {
     );
 
     console.log("FORGOT PASSWORD RESPONSE:", response.data);
+    console.log("STATUS:", response.status);
+  },
+
+  async resetPassword(payload: ResetPasswordPayload): Promise<void> {
+    const response = await apiClient.post(
+      endpoints.auth.resetPassword,
+      payload,
+      { skipAuth: true },
+    );
+
+    console.log("RESET PASSWORD RESPONSE:", response.data);
     console.log("STATUS:", response.status);
   },
 

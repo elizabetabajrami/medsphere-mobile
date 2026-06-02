@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList, PatientTabParamList } from '../../../navigation/types';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
@@ -17,6 +18,20 @@ type PatientDoctorsScreenProps = CompositeScreenProps<
 
 export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) => {
   const viewModel = usePatientDoctorsViewModel();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDoctors = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return viewModel.doctors;
+    }
+
+    return viewModel.doctors.filter((doctor) => (
+      doctor.name.toLowerCase().includes(query)
+      || doctor.specialty.toLowerCase().includes(query)
+    ));
+  }, [searchQuery, viewModel.doctors]);
 
   const handleBook = (doctor: PatientDoctor) => {
     navigation.navigate('DoctorDetails', { doctor });
@@ -30,12 +45,39 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Doctors</Text>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={20} color="#8A9681" />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search doctors"
+            placeholderTextColor="#8A9681"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+            style={styles.searchInput}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => setSearchQuery('')}
+              hitSlop={8}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={20} color="#8A9681" />
+            </Pressable>
+          )}
+        </View>
         <ErrorMessage message={viewModel.error} />
         {viewModel.isLoading && <LoadingView />}
         {!viewModel.isLoading && !viewModel.error && viewModel.doctors.length === 0 && (
           <Text style={styles.emptyText}>No doctors found.</Text>
         )}
-        {!viewModel.isLoading && viewModel.doctors.map((doctor) => (
+        {!viewModel.isLoading && !viewModel.error && viewModel.doctors.length > 0 && filteredDoctors.length === 0 && (
+          <Text style={styles.emptyText}>No doctors match your search.</Text>
+        )}
+        {!viewModel.isLoading && filteredDoctors.map((doctor) => (
           <View key={doctor.id} style={styles.card}>
             <View style={styles.avatar}>
               <Ionicons name="person-outline" size={28} color="#6B941F" />
@@ -84,6 +126,31 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '800',
     marginBottom: 18,
+  },
+  searchBox: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E8EEDF',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#303A28',
+    fontSize: 15,
+    fontWeight: '600',
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+  },
+  clearButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     flexDirection: 'row',

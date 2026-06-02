@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
 import { usePatientProfileViewModel } from '../viewmodel/usePatientProfileViewModel';
@@ -13,7 +14,13 @@ type PatientProfileScreenProps = {
 export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<PatientStackParamList>>();
   const viewModel = usePatientProfileViewModel();
-  const { profile } = viewModel;
+  const { loadProfile, profile } = viewModel;
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile]),
+  );
 
   const handleLogout = async () => {
     const didLogout = await viewModel.logout();
@@ -36,7 +43,11 @@ export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) =>
         <View style={styles.card}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatar}>
-              <Ionicons name="person-outline" size={42} color="#6B941F" />
+              {profile.avatarUrl ? (
+                <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person-outline" size={42} color="#6B941F" />
+              )}
             </View>
             <View style={styles.editIcon}>
               <Ionicons name="pencil" size={14} color="#FFFFFF" />
@@ -49,7 +60,6 @@ export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) =>
           <View style={styles.infoList}>
             <InfoRow icon="mail-outline" label="Email" value={profile.email} />
             <InfoRow icon="call-outline" label="Phone" value={profile.phone} />
-            <InfoRow icon="location-outline" label="Location" value={profile.location} />
           </View>
         </View>
 
@@ -135,6 +145,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#F2F6EC',
     borderRadius: 28,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   editIcon: {
     position: 'absolute',

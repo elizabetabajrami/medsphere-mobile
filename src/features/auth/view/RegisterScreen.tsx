@@ -45,12 +45,21 @@ export const RegisterScreen = ({
     navigation.navigate("VerifyEmail", { email: viewModel.email.trim(), from: "Register" });
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate("Landing");
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardView}
     >
-      <AppHeader title="Create Account" showBack onBackPress={() => navigation.navigate("Landing")} />
+      <AppHeader title="Create Account" showBack onBackPress={handleBack} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

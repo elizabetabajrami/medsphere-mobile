@@ -6,5 +6,9 @@ export type User = {
   firstName?: string;
   lastName?: string;
   email: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  avatarUrl?: string;
   role: UserRole;
 };

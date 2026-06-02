@@ -2,6 +2,28 @@ import { apiClient, coreApiClient } from '../../../network/apiClient';
 import { endpoints } from '../../../network/endpoints';
 import type { Patient, PatientDoctor } from '../model/Patient';
 
+type UserProfileResponse = {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  avatarUrl?: string;
+  role?: string;
+};
+
+type UpdateUserProfilePayload = {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  avatarUrl?: string;
+};
+
 type DoctorResponse = {
   id?: string;
   _id?: string;
@@ -48,6 +70,16 @@ const getDoctorReviews = (reviews?: string | number) => {
 };
 
 export const patientService = {
+  async getMyProfile(): Promise<UserProfileResponse> {
+    const response = await apiClient.get<UserProfileResponse>(endpoints.patients.me);
+    return response.data;
+  },
+
+  async updateMyProfile(payload: UpdateUserProfilePayload): Promise<UserProfileResponse> {
+    const response = await apiClient.patch<UserProfileResponse>(endpoints.patients.me, payload);
+    return response.data;
+  },
+
   async createPatientProfile(payload: CreatePatientPayload): Promise<Patient> {
     const response = await coreApiClient.post<Patient>(endpoints.patients.create, payload);
     return response.data;

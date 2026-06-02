@@ -5,6 +5,7 @@ import type {
   AppointmentStatus,
   AvailableSlot,
   BookAppointmentPayload,
+  RescheduleAppointmentPayload,
 } from '../model/Appointment';
 
 type AvailableSlotsResponse =
@@ -135,6 +136,17 @@ export const appointmentService = {
     const response = await coreApiClient.patch<Appointment>(
       endpoints.appointments.updateStatus(appointmentId),
       { status },
+    );
+    return response.data;
+  },
+
+  async rescheduleAppointment(
+    appointmentId: string,
+    payload: RescheduleAppointmentPayload,
+  ): Promise<Appointment> {
+    const response = await coreApiClient.patch<Appointment>(
+      endpoints.appointments.reschedule(appointmentId),
+      payload,
     );
     return response.data;
   },

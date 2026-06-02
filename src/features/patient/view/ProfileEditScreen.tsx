@@ -1,22 +1,87 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardTypeOptions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
 import { AppHeader } from '../../../shared/components/AppHeader';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { usePatientProfileViewModel } from '../viewmodel/usePatientProfileViewModel';
 
 type ProfileEditScreenProps = NativeStackScreenProps<PatientStackParamList, 'ProfileEdit'>;
 
 export const ProfileEditScreen = ({ navigation }: ProfileEditScreenProps) => {
-  const { profile } = usePatientProfileViewModel();
+  const { error, isSaving, profile, saveProfile } = usePatientProfileViewModel();
+  const [name, setName] = useState(profile.name);
+  const [phone, setPhone] = useState(profile.phone === 'Not provided' ? '' : profile.phone);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+
+  useEffect(() => {
+    setName(profile.name);
+    setPhone(profile.phone === 'Not provided' ? '' : profile.phone);
+    setAvatarUrl(profile.avatarUrl);
+  }, [profile]);
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('PatientTabs', { screen: 'PatientProfile' });
+  };
+
+  const handlePickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Please allow photo access to choose a profile picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setAvatarUrl(result.assets[0].uri);
+    }
+  };
+
+  const handleSave = async () => {
+    const didSave = await saveProfile({
+      name,
+      phone,
+      avatarUrl,
+    });
+
+    if (didSave) {
+      navigation.navigate('PatientTabs', { screen: 'PatientProfile' });
+    } else {
+      Alert.alert('Profile not saved', 'Please try again.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <AppHeader
         title="Edit Profile"
         showBack
-        onBackPress={() => navigation.navigate('PatientTabs', { screen: 'PatientProfile' })}
+        onBackPress={handleBack}
       />
 
       <ScrollView
@@ -25,19 +90,60 @@ export const ProfileEditScreen = ({ navigation }: ProfileEditScreenProps) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <ErrorMessage message={error} />
         <View style={styles.card}>
-          <Field icon="person-outline" label="Name" value={profile.name} />
-          <Field icon="mail-outline" label="Email" value={profile.email} />
-          <Field icon="call-outline" label="Phone" value={profile.phone} />
-          <Field icon="location-outline" label="Location" value={profile.location} />
+          <View style={styles.avatarSection}>
+            <View style={styles.avatar}>
+              {avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person-outline" size={42} color="#6B941F" />
+              )}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handlePickPhoto}
+              style={({ pressed }) => [styles.photoButton, pressed && styles.photoButtonPressed]}
+            >
+              <Ionicons name="camera-outline" size={18} color="#6B941F" />
+              <Text style={styles.photoButtonText}>Change Photo</Text>
+            </Pressable>
+          </View>
+
+          <Field
+            icon="person-outline"
+            label="Name"
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter your name"
+          />
+          <Field
+            icon="mail-outline"
+            label="Email"
+            value={profile.email}
+            editable={false}
+            placeholder="Email"
+          />
+          <Field
+            icon="call-outline"
+            label="Phone"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            placeholder="Add phone number"
+          />
         </View>
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => navigation.navigate('PatientTabs', { screen: 'PatientProfile' })}
-          style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]}
+          disabled={isSaving}
+          onPress={handleSave}
+          style={({ pressed }) => [
+            styles.saveButton,
+            (pressed || isSaving) && styles.saveButtonPressed,
+          ]}
         >
-          <Text style={styles.saveButtonText}>Save Changes</Text>
+          <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save Changes'}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -48,17 +154,33 @@ type FieldProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
+  onChangeText?: (value: string) => void;
+  placeholder: string;
+  editable?: boolean;
+  keyboardType?: KeyboardTypeOptions;
 };
 
-const Field = ({ icon, label, value }: FieldProps) => (
+const Field = ({
+  icon,
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  editable = true,
+  keyboardType = 'default',
+}: FieldProps) => (
   <View style={styles.field}>
     <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputContainer}>
+    <View style={[styles.inputContainer, !editable && styles.inputContainerDisabled]}>
       <Ionicons name={icon} size={20} color="#8A9581" style={styles.inputIcon} />
       <TextInput
-        defaultValue={value}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
         placeholderTextColor="#A7B09E"
-        style={styles.input}
+        editable={editable}
+        keyboardType={keyboardType}
+        style={[styles.input, !editable && styles.inputDisabled]}
       />
     </View>
   </View>
@@ -89,6 +211,43 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 2,
   },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 22,
+  },
+  avatar: {
+    width: 96,
+    height: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F2F6EC',
+    borderRadius: 30,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  photoButton: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: '#DDE6D2',
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 12,
+    paddingHorizontal: 16,
+  },
+  photoButtonPressed: {
+    opacity: 0.84,
+  },
+  photoButtonText: {
+    color: '#6B941F',
+    fontSize: 14,
+    fontWeight: '800',
+    marginLeft: 8,
+  },
   field: {
     marginBottom: 16,
   },
@@ -108,6 +267,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
   },
+  inputContainerDisabled: {
+    backgroundColor: '#F5F7F1',
+  },
   inputIcon: {
     marginRight: 10,
   },
@@ -116,6 +278,9 @@ const styles = StyleSheet.create({
     color: '#1F271A',
     fontSize: 16,
     paddingVertical: 12,
+  },
+  inputDisabled: {
+    color: '#66715E',
   },
   saveButton: {
     minHeight: 54,

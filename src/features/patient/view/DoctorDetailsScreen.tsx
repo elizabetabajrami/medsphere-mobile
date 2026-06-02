@@ -9,13 +9,21 @@ type DoctorDetailsScreenProps = NativeStackScreenProps<PatientStackParamList, 'D
 
 export const DoctorDetailsScreen = ({ navigation, route }: DoctorDetailsScreenProps) => {
   const { doctor } = route.params;
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('PatientTabs', { screen: 'PatientDoctors' });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <AppHeader
         title="Doctor Details"
         showBack
-        onBackPress={() => navigation.navigate('PatientTabs', { screen: 'PatientDoctors' })}
+        onBackPress={handleBack}
       />
 
       <ScrollView

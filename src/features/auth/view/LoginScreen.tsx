@@ -40,12 +40,21 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
     }
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('Landing');
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardView}
     >
-      <AppHeader title="Sign In" showBack onBackPress={() => navigation.navigate('Landing')} />
+      <AppHeader title="Sign In" showBack onBackPress={handleBack} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

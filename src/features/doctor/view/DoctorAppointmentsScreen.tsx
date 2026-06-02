@@ -13,10 +13,18 @@ type DoctorAppointmentsScreenProps = NativeStackScreenProps<
 
 export const DoctorAppointmentsScreen = ({ navigation }: DoctorAppointmentsScreenProps) => {
   const viewModel = useDoctorAppointmentsViewModel();
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('DoctorHome');
+  };
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Appointments" showBack onBackPress={() => navigation.navigate('DoctorHome')} />
+      <AppHeader title="Appointments" showBack onBackPress={handleBack} />
       <Text style={styles.title}>Doctor Appointments</Text>
       <ErrorMessage message={viewModel.error} />
       {viewModel.isLoading && <LoadingView />}

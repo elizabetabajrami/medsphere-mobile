@@ -11,6 +11,9 @@ type AppFeedbackModalProps = {
   title: string;
   message: string;
   primaryButtonText: string;
+  primaryButtonDisabled?: boolean;
+  secondaryButtonText?: string;
+  onPrimaryPress?: () => void;
   onClose: () => void;
 };
 
@@ -49,6 +52,9 @@ export const AppFeedbackModal = ({
   title,
   message,
   primaryButtonText,
+  primaryButtonDisabled = false,
+  secondaryButtonText,
+  onPrimaryPress,
   onClose,
 }: AppFeedbackModalProps) => {
   const currentStyle = feedbackStyles[type];
@@ -74,15 +80,29 @@ export const AppFeedbackModal = ({
 
           <Pressable
             accessibilityRole="button"
-            onPress={onClose}
+            disabled={primaryButtonDisabled}
+            onPress={onPrimaryPress || onClose}
             style={({ pressed }) => [
               styles.primaryButton,
               { backgroundColor: currentStyle.color },
-              pressed && styles.primaryButtonPressed,
+              (pressed || primaryButtonDisabled) && styles.primaryButtonPressed,
             ]}
           >
             <Text style={styles.primaryButtonText}>{primaryButtonText}</Text>
           </Pressable>
+
+          {secondaryButtonText ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onClose}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.secondaryButtonPressed,
+              ]}
+            >
+              <Text style={styles.secondaryButtonText}>{secondaryButtonText}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -148,6 +168,25 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  secondaryButton: {
+    width: '100%',
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DDE6D2',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  secondaryButtonPressed: {
+    opacity: 0.86,
+  },
+  secondaryButtonText: {
+    color: '#303A28',
     fontSize: 16,
     fontWeight: '800',
   },

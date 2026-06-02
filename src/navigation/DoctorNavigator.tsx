@@ -7,7 +7,15 @@ import type { DoctorStackParamList } from './types';
 const Stack = createNativeStackNavigator<DoctorStackParamList>();
 
 export const DoctorNavigator = () => (
-  <Stack.Navigator initialRouteName="DoctorHome" screenOptions={{ headerShown: false }}>
+  <Stack.Navigator
+    initialRouteName="DoctorHome"
+    screenOptions={{
+      animation: 'slide_from_right',
+      fullScreenGestureEnabled: true,
+      gestureEnabled: true,
+      headerShown: false,
+    }}
+  >
     <Stack.Screen name="DoctorHome" component={DoctorHomeScreen} />
     <Stack.Screen
       name="DoctorAppointments"

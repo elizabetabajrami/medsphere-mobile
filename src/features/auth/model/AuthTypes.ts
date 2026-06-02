@@ -26,6 +26,11 @@ export type VerifyEmailPayload = {
   token: string;
 };
 
+export type ResetPasswordPayload = {
+  token: string;
+  password: string;
+};
+
 export type AuthResponse = {
   token?: string;
   accessToken?: string;

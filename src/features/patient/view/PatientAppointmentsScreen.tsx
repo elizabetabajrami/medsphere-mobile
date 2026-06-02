@@ -10,11 +10,15 @@ import type { PatientStackParamList, PatientTabParamList } from '../../../naviga
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { LoadingView } from '../../../shared/components/LoadingView';
 import { usePatientAppointmentsViewModel } from '../viewmodel/usePatientAppointmentsViewModel';
+import type { PatientAppointment } from '../../appointments/model/Appointment';
 
 type PatientAppointmentsScreenProps = CompositeScreenProps<
   BottomTabScreenProps<PatientTabParamList, 'PatientAppointments'>,
   NativeStackScreenProps<PatientStackParamList>
 >;
+
+const isCancelledAppointment = (appointment: PatientAppointment) =>
+  appointment.status.toLowerCase() === 'cancelled';
 
 export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScreenProps) => {
   const viewModel = usePatientAppointmentsViewModel();
@@ -33,7 +37,7 @@ export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScr
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Upcoming Appointments</Text>
+        <Text style={styles.title}>Appointments</Text>
         <ErrorMessage message={viewModel.error} />
         {viewModel.isLoading && <LoadingView />}
 
@@ -44,41 +48,79 @@ export const PatientAppointmentsScreen = ({ navigation }: PatientAppointmentsScr
         ) : null}
 
         {!viewModel.isLoading && !viewModel.error ? (
-          viewModel.appointments.map((appointment) => (
-            <View key={appointment.id} style={styles.card}>
+          viewModel.appointments.map((appointment) => {
+            const isCancelled = isCancelledAppointment(appointment);
+
+            return (
+            <View key={appointment.id} style={[styles.card, isCancelled && styles.cancelledCard]}>
               <View style={styles.cardHeader}>
-                <View style={styles.avatar}>
-                  <Ionicons name="person-outline" size={26} color="#6B941F" />
+                <View style={[styles.avatar, isCancelled && styles.cancelledAvatar]}>
+                  <Ionicons
+                    name={isCancelled ? 'close-circle-outline' : 'person-outline'}
+                    size={26}
+                    color={isCancelled ? '#B42318' : '#6B941F'}
+                  />
                 </View>
                 <View style={styles.doctorInfo}>
-                  <Text style={styles.doctorName}>{appointment.doctorName}</Text>
+                  <Text style={[styles.doctorName, isCancelled && styles.cancelledText]}>
+                    {appointment.doctorName}
+                  </Text>
                   <Text style={styles.specialty}>{appointment.specialty}</Text>
                 </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>{appointment.status}</Text>
+                <View style={[styles.statusBadge, isCancelled && styles.cancelledStatusBadge]}>
+                  <Text style={[styles.statusText, isCancelled && styles.cancelledStatusText]}>
+                    {appointment.status}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.appointmentInfo}>
                 <View style={styles.infoRow}>
-                  <Ionicons name="calendar-outline" size={18} color="#6B941F" />
-                  <Text style={styles.infoText}>{appointment.date}</Text>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color={isCancelled ? '#B42318' : '#6B941F'}
+                  />
+                  <Text style={[styles.infoText, isCancelled && styles.cancelledText]}>
+                    {appointment.date}
+                  </Text>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons name="time-outline" size={18} color="#6B941F" />
-                  <Text style={styles.infoText}>{appointment.time}</Text>
+                  <Ionicons
+                    name="time-outline"
+                    size={18}
+                    color={isCancelled ? '#B42318' : '#6B941F'}
+                  />
+                  <Text style={[styles.infoText, isCancelled && styles.cancelledText]}>
+                    {appointment.time}
+                  </Text>
                 </View>
               </View>
+
+              {isCancelled ? (
+                <View style={styles.cancelledNotice}>
+                  <Ionicons name="information-circle-outline" size={17} color="#B42318" />
+                  <Text style={styles.cancelledNoticeText}>This appointment was cancelled.</Text>
+                </View>
+              ) : null}
 
               <Pressable
                 accessibilityRole="button"
                 onPress={() => navigation.navigate('AppointmentDetails', { appointment })}
-                style={styles.detailsButton}
+                style={[styles.detailsButton, isCancelled && styles.cancelledDetailsButton]}
               >
-                <Text style={styles.detailsButtonText}>View Details</Text>
+                <Text
+                  style={[
+                    styles.detailsButtonText,
+                    isCancelled && styles.cancelledDetailsButtonText,
+                  ]}
+                >
+                  View Details
+                </Text>
               </Pressable>
             </View>
-          ))
+            );
+          })
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -118,6 +160,10 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 2,
   },
+  cancelledCard: {
+    backgroundColor: '#FFFDFD',
+    borderColor: '#F1CFCF',
+  },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -130,6 +176,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F6EC',
     borderRadius: 16,
     marginRight: 12,
+  },
+  cancelledAvatar: {
+    backgroundColor: '#FFF1EF',
   },
   doctorInfo: {
     flex: 1,
@@ -156,6 +205,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  cancelledStatusBadge: {
+    backgroundColor: '#FFF1EF',
+    borderColor: '#F1CFCF',
+    borderWidth: 1,
+  },
+  cancelledStatusText: {
+    color: '#B42318',
+  },
   appointmentInfo: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -172,6 +229,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  cancelledText: {
+    color: '#6F2A25',
+  },
+  cancelledNotice: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF1EF',
+    borderColor: '#F1CFCF',
+    borderRadius: 13,
+    borderWidth: 1,
+    gap: 7,
+    marginTop: 16,
+    paddingHorizontal: 12,
+  },
+  cancelledNoticeText: {
+    flex: 1,
+    color: '#8F1F17',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   detailsButton: {
     alignItems: 'center',
     backgroundColor: '#6B941F',
@@ -183,6 +261,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  cancelledDetailsButton: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E7C6C6',
+    borderWidth: 1,
+  },
+  cancelledDetailsButtonText: {
+    color: '#B42318',
   },
   emptyCard: {
     alignItems: 'center',

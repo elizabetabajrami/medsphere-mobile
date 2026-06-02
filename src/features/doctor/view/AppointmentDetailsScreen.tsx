@@ -8,17 +8,28 @@ type AppointmentDetailsScreenProps = NativeStackScreenProps<
   'AppointmentDetails'
 >;
 
-export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetailsScreenProps) => (
-  <View style={styles.container}>
-    <AppHeader
-      title="Appointment Details"
-      showBack
-      onBackPress={() => navigation.navigate('DoctorAppointments')}
-    />
-    <Text style={styles.title}>Appointment Details</Text>
-    <Text>Appointment ID: {route.params.appointmentId}</Text>
-  </View>
-);
+export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetailsScreenProps) => {
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate('DoctorAppointments');
+  };
+
+  return (
+    <View style={styles.container}>
+      <AppHeader
+        title="Appointment Details"
+        showBack
+        onBackPress={handleBack}
+      />
+      <Text style={styles.title}>Appointment Details</Text>
+      <Text>Appointment ID: {route.params.appointmentId}</Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

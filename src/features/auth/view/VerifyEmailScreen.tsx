@@ -45,6 +45,11 @@ export const VerifyEmailScreen = ({
   };
 
   const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
     navigation.navigate(route.params.from === "Register" ? "Register" : "Login");
   };
 

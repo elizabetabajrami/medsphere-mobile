@@ -4,6 +4,7 @@ export const endpoints = {
     register: "/api/auth/register",
     verifyEmail: "/api/auth/verify-email",
     forgotPassword: "/api/auth/forgot-password",
+    resetPassword: "/api/auth/reset-password",
   },
 
   doctors: {
@@ -27,6 +28,8 @@ export const endpoints = {
     patientMine: "/api/appointments/my",
     doctorMine: "/api/appointments/doctor/my",
     byId: (appointmentId: string) => `/api/appointments/${appointmentId}`,
+    reschedule: (appointmentId: string) =>
+      `/api/appointments/${appointmentId}/reschedule`,
     updateStatus: (appointmentId: string) =>
       `/api/appointments/${appointmentId}/status`,
   },

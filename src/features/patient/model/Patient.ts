@@ -18,5 +18,5 @@ export type PatientProfile = {
   name: string;
   email: string;
   phone: string;
-  location: string;
+  avatarUrl?: string;
 };

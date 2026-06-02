@@ -1,23 +1,17 @@
 import { useCallback, useState } from 'react';
-import type { Appointment } from '../../appointments/model/Appointment';
+import type { Appointment, PatientAppointment } from '../../appointments/model/Appointment';
 import { appointmentService } from '../../appointments/service/appointmentService';
 import { getUser } from '../../../storage/tokenStorage';
 
-type NextAppointment = {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  date: string;
-  time: string;
-  status: string;
-};
-
 type AppointmentResponse = Appointment & {
   _id?: string;
+  doctorId?: string;
   doctorName?: string;
   specialty?: string;
   time?: string;
   doctor?: {
+    id?: string;
+    _id?: string;
     name?: string;
     fullName?: string;
     firstName?: string;
@@ -87,8 +81,9 @@ const formatAppointmentTime = (dateValue: string, time?: string) => {
   });
 };
 
-const mapAppointment = (appointment: AppointmentResponse): NextAppointment => ({
+const mapAppointment = (appointment: AppointmentResponse): PatientAppointment => ({
   id: appointment.id || appointment._id || appointment.date,
+  doctorId: appointment.doctorId || appointment.doctor?.id || appointment.doctor?._id || '',
   doctorName: getDoctorName(appointment),
   specialty: appointment.specialty || appointment.doctor?.specialty || 'Healthcare visit',
   date: formatAppointmentDate(appointment.date),
@@ -98,7 +93,7 @@ const mapAppointment = (appointment: AppointmentResponse): NextAppointment => ({
 
 export const usePatientHomeViewModel = () => {
   const [patientName, setPatientName] = useState('Patient');
-  const [nextAppointment, setNextAppointment] = useState<NextAppointment | null>(null);
+  const [nextAppointment, setNextAppointment] = useState<PatientAppointment | null>(null);
   const [isLoadingAppointment, setIsLoadingAppointment] = useState(true);
 
   const loadHome = useCallback(async () => {
