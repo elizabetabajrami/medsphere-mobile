@@ -1,5 +1,5 @@
-import axios from "axios";
 import type { AxiosInstance } from "axios";
+import axios from "axios";
 import { getToken } from "../storage/tokenStorage";
 
 declare module "axios" {
@@ -12,8 +12,8 @@ declare module "axios" {
   }
 }
 
-const AUTH_BASE_URL = "http://192.168.178.143:3005";
-const CORE_BASE_URL = "http://192.168.178.143:3007";
+const AUTH_BASE_URL = "http://192.168.1.13:3005";
+const CORE_BASE_URL = "http://192.168.1.13:3007";
 
 export const apiClient = axios.create({
   baseURL: AUTH_BASE_URL,

@@ -10,9 +10,14 @@ export type AppointmentStatus =
 
 export type Appointment = {
   id: string;
+  _id?: string;
   patientId: string;
   doctorId: string;
   date: string;
+  appointmentDate?: string;
+  scheduledAt?: string;
+  start?: string;
+  startTime?: string;
   reason: string;
   status: AppointmentStatus;
 };
@@ -29,11 +34,13 @@ export type RescheduleAppointmentPayload = {
 };
 
 export type AvailableSlot = {
-  start: string;
-  end: string;
-  startTime: string;
-  endTime: string;
-  durationMinutes: number;
+  start?: string;
+  end?: string;
+  startTime?: string;
+  endTime?: string;
+  time?: string;
+  durationMinutes?: number;
+  isAvailable?: boolean;
 };
 
 export type PatientAppointment = {

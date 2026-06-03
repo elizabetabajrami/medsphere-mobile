@@ -10,7 +10,7 @@ export const endpoints = {
   doctors: {
     list: "/api/staff/doctors",
     byId: (doctorId: string) => `/doctors/${doctorId}`,
-    appointments: (doctorId: string) => `/doctors/${doctorId}/appointments`,
+    appointments: (doctorId: string) => `/api/staff/doctors/${doctorId}/appointments`,
     availableSlots: (doctorId: string, date: string) =>
       `/api/staff/doctors/${doctorId}/available-slots?date=${date}`,
   },

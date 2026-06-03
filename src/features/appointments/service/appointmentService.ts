@@ -125,8 +125,10 @@ export const appointmentService = {
   },
 
   async getDoctorAppointments(doctorId: string): Promise<Appointment[]> {
-    const response = await coreApiClient.get<Appointment[]>(endpoints.doctors.appointments(doctorId));
-    return response.data;
+    const response = await coreApiClient.get<AppointmentListResponse>(
+      endpoints.doctors.appointments(doctorId),
+    );
+    return normalizeAppointments(response.data);
   },
 
   async updateAppointmentStatus(

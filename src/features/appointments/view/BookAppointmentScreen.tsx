@@ -6,7 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
 import { AppHeader } from '../../../shared/components/AppHeader';
 import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
-import { useBookAppointmentViewModel } from '../viewmodel/useBookAppointmentViewModel';
+import {
+  getSlotDisplayTime,
+  getSlotStartDateTime,
+  useBookAppointmentViewModel,
+} from '../viewmodel/useBookAppointmentViewModel';
 
 type BookAppointmentScreenProps = NativeStackScreenProps<PatientStackParamList, 'BookAppointment'>;
 
@@ -112,17 +116,29 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
         ) : null}
         <View style={styles.timeGrid}>
           {timeSlots.map((slot) => {
-            const isSelected = viewModel.selectedTime === slot.start;
+            const slotStart = getSlotStartDateTime(slot, viewModel.selectedDate);
+            const slotDisplayTime = getSlotDisplayTime(slot);
+            const isSelected = viewModel.selectedTime === slotStart;
+            const isUnavailable = slot.isAvailable === false;
 
             return (
               <Pressable
-                key={slot.start}
+                key={slotStart || slotDisplayTime}
                 accessibilityRole="button"
-                onPress={() => viewModel.setSelectedTime(slot.start)}
-                style={[styles.timeSlot, isSelected && styles.selectedOption]}
+                disabled={!slotStart}
+                onPress={() => viewModel.selectTimeSlot(slot)}
+                style={[
+                  styles.timeSlot,
+                  isUnavailable && styles.unavailableTimeSlot,
+                  isSelected && styles.selectedOption,
+                ]}
               >
-                <Text style={[styles.timeText, isSelected && styles.selectedText]}>
-                  {slot.startTime}
+                <Text style={[
+                  styles.timeText,
+                  isUnavailable && styles.unavailableTimeText,
+                  isSelected && styles.selectedText,
+                ]}>
+                  {slotDisplayTime}
                 </Text>
               </Pressable>
             );
@@ -168,6 +184,15 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
         message={bookingError || ''}
         primaryButtonText="Try Again"
         onClose={() => setBookingError(null)}
+      />
+
+      <AppFeedbackModal
+        visible={Boolean(viewModel.unavailableSlotMessage)}
+        type="error"
+        title="Time Unavailable"
+        message={viewModel.unavailableSlotMessage || ''}
+        primaryButtonText="Choose Another Time"
+        onClose={viewModel.clearUnavailableSlotMessage}
       />
     </SafeAreaView>
   );
@@ -287,10 +312,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
+  unavailableTimeSlot: {
+    backgroundColor: '#FFF1F1',
+    borderColor: '#E15B5B',
+  },
   timeText: {
     color: '#303A28',
     fontSize: 14,
     fontWeight: '800',
+  },
+  unavailableTimeText: {
+    color: '#B42318',
   },
   emptyText: {
     color: '#66715E',
