@@ -15,6 +15,8 @@ type DateOption = {
 const DEFAULT_SLOT_DURATION_MINUTES = 30;
 const DEFAULT_WORK_START_HOUR = 8;
 const DEFAULT_WORK_END_HOUR = 17;
+const EXPECTED_DAILY_SLOT_COUNT =
+  ((DEFAULT_WORK_END_HOUR - DEFAULT_WORK_START_HOUR) * 60) / DEFAULT_SLOT_DURATION_MINUTES;
 
 const formatDateForApi = (date: Date) => {
   const year = date.getFullYear();
@@ -95,9 +97,6 @@ const formatMinutesAsTime = (minutes: number) => {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 };
 
-const getSlotDuration = (slots: AvailableSlot[]) =>
-  slots.find((slot) => slot.durationMinutes)?.durationMinutes || DEFAULT_SLOT_DURATION_MINUTES;
-
 const getAppointmentDateTime = (appointment: Appointment) =>
   appointment.date || appointment.appointmentDate || appointment.scheduledAt || appointment.start;
 
@@ -107,17 +106,12 @@ const getAppointmentTime = (appointment: Appointment) =>
 const getAppointmentId = (appointment: Appointment) => appointment.id || appointment._id || '';
 
 const isBlockingAppointment = (appointment: Appointment, appointmentId?: string) => {
-  const status = appointment.status.toLowerCase();
-
-  if (status === 'cancelled' || status === 'completed') {
-    return false;
-  }
-
   if (appointmentId && getAppointmentId(appointment) === appointmentId) {
     return false;
   }
 
-  return true;
+  const status = String(appointment.status || '').toLowerCase();
+  return status === 'pending' || status === 'confirmed' || status === 'scheduled';
 };
 
 const createDailySlots = (selectedDate: string, durationMinutes: number): AvailableSlot[] => {
@@ -148,17 +142,16 @@ const createBookableSlots = (
   selectedDate: string,
   appointmentId?: string,
 ) => {
-  const availableSlotsByTime = new Map(
+  const availableTimes = new Set(
     availableSlots
-      .map((slot) => {
-        const time =
-          getTimePart(getSlotStartDateTime(slot, selectedDate)) ||
-          getTimePart(slot.startTime || slot.time);
-
-        return time ? [time, slot] : null;
-      })
-      .filter((entry): entry is [string, AvailableSlot] => Boolean(entry)),
+      .map((slot) =>
+        getTimePart(getSlotStartDateTime(slot, selectedDate)) ||
+        getTimePart(slot.startTime || slot.time),
+      )
+      .filter(Boolean),
   );
+  const hasCompleteAvailabilitySignal = availableTimes.size > 0
+    && availableTimes.size < EXPECTED_DAILY_SLOT_COUNT;
 
   const bookedTimes = new Set(
     appointments
@@ -168,15 +161,15 @@ const createBookableSlots = (
       .filter(Boolean),
   );
 
-  return createDailySlots(selectedDate, getSlotDuration(availableSlots)).map((slot) => {
+  return createDailySlots(selectedDate, DEFAULT_SLOT_DURATION_MINUTES).map((slot) => {
     const slotTime = getSlotDisplayTime(slot);
-    const availableSlot = availableSlotsByTime.get(slotTime);
     const isBooked = bookedTimes.has(slotTime);
+    const isUnavailableFromAvailability =
+      hasCompleteAvailabilitySignal && !availableTimes.has(slotTime);
 
     return {
       ...slot,
-      ...availableSlot,
-      isAvailable: Boolean(availableSlot) && !isBooked,
+      isAvailable: !isBooked && !isUnavailableFromAvailability,
     };
   });
 };
@@ -187,12 +180,7 @@ const filterSlotsForSelectedDate = (
   selectedDate: string,
   appointmentId?: string,
 ) =>
-  createBookableSlots(slots.filter((slot) => {
-    const slotStart = getSlotStartDateTime(slot, selectedDate);
-    const slotDate = getDatePart(slotStart) || selectedDate;
-
-    return Boolean(slotStart) && slotDate === selectedDate;
-  }), appointments, selectedDate, appointmentId);
+  createBookableSlots(slots, appointments, selectedDate, appointmentId);
 
 const createDateOptions = () => {
   const options: DateOption[] = [];

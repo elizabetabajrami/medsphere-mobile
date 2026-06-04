@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { PatientDoctor } from '../model/Patient';
 import { patientService } from '../service/patientService';
 
@@ -7,7 +7,7 @@ export const usePatientDoctorsViewModel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDoctors = async () => {
+  const loadDoctors = useCallback(async () => {
     setError(null);
 
     try {
@@ -19,15 +19,16 @@ export const usePatientDoctorsViewModel = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadDoctors();
-  }, []);
+  }, [loadDoctors]);
 
   return {
     doctors,
     isLoading,
     error,
+    refresh: loadDoctors,
   };
 };

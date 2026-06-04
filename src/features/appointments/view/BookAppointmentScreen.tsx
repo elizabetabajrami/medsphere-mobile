@@ -129,14 +129,14 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
                 onPress={() => viewModel.selectTimeSlot(slot)}
                 style={[
                   styles.timeSlot,
-                  isUnavailable && styles.unavailableTimeSlot,
                   isSelected && styles.selectedOption,
+                  isUnavailable && styles.unavailableTimeSlot,
                 ]}
               >
                 <Text style={[
                   styles.timeText,
-                  isUnavailable && styles.unavailableTimeText,
                   isSelected && styles.selectedText,
+                  isUnavailable && styles.unavailableTimeText,
                 ]}>
                   {slotDisplayTime}
                 </Text>
@@ -315,6 +315,7 @@ const styles = StyleSheet.create({
   unavailableTimeSlot: {
     backgroundColor: '#FFF1F1',
     borderColor: '#E15B5B',
+    borderWidth: 2,
   },
   timeText: {
     color: '#303A28',
@@ -323,6 +324,7 @@ const styles = StyleSheet.create({
   },
   unavailableTimeText: {
     color: '#B42318',
+    fontWeight: '800',
   },
   emptyText: {
     color: '#66715E',

@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { CompositeScreenProps } from '@react-navigation/native';
+import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList, PatientTabParamList } from '../../../navigation/types';
@@ -18,7 +18,14 @@ type PatientDoctorsScreenProps = CompositeScreenProps<
 
 export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) => {
   const viewModel = usePatientDoctorsViewModel();
+  const { refresh } = viewModel;
   const [searchQuery, setSearchQuery] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   const filteredDoctors = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -30,6 +37,7 @@ export const PatientDoctorsScreen = ({ navigation }: PatientDoctorsScreenProps) 
     return viewModel.doctors.filter((doctor) => (
       doctor.name.toLowerCase().includes(query)
       || doctor.specialty.toLowerCase().includes(query)
+      || doctor.department?.toLowerCase().includes(query)
     ));
   }, [searchQuery, viewModel.doctors]);
 

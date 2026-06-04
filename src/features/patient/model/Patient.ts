@@ -10,6 +10,7 @@ export type PatientDoctor = {
   id: string;
   name: string;
   specialty: string;
+  department?: string;
   rating: string;
   reviews: string;
 };
