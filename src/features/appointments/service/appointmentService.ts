@@ -32,6 +32,8 @@ type AppointmentListResponse =
           };
     };
 
+export type AppointmentStatusAction = 'complete' | 'cancel' | 'no-show';
+
 const normalizeAvailableSlots = (payload: AvailableSlotsResponse): AvailableSlot[] => {
   if (Array.isArray(payload)) {
     return payload;
@@ -126,7 +128,7 @@ export const appointmentService = {
 
   async getDoctorAppointments(doctorId: string): Promise<Appointment[]> {
     const response = await coreApiClient.get<AppointmentListResponse>(
-      endpoints.doctors.appointments(doctorId),
+      doctorId ? endpoints.doctors.appointments(doctorId) : endpoints.appointments.doctorMine,
     );
     return normalizeAppointments(response.data);
   },
@@ -138,6 +140,21 @@ export const appointmentService = {
     const response = await coreApiClient.patch<Appointment>(
       endpoints.appointments.updateStatus(appointmentId),
       { status },
+    );
+    return response.data;
+  },
+
+  async updateAppointmentStatusAction(
+    appointmentId: string,
+    action: AppointmentStatusAction,
+    reason?: string,
+  ): Promise<Appointment> {
+    const response = await coreApiClient.patch<Appointment>(
+      endpoints.appointments.updateStatus(appointmentId),
+      {
+        action,
+        ...(reason ? { reason } : {}),
+      },
     );
     return response.data;
   },

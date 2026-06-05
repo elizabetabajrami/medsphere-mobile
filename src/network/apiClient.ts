@@ -12,8 +12,9 @@ declare module "axios" {
   }
 }
 
-const AUTH_BASE_URL = "http://192.168.1.13:3005";
-const CORE_BASE_URL = "http://192.168.1.13:3007";
+const AUTH_BASE_URL = "http://192.168.1.10:3005";
+const CORE_BASE_URL = "http://192.168.1.10:3007";
+const NOTIFICATION_BASE_URL = "http://192.168.1.10:3008";
 
 export const apiClient = axios.create({
   baseURL: AUTH_BASE_URL,
@@ -25,6 +26,14 @@ export const apiClient = axios.create({
 
 export const coreApiClient = axios.create({
   baseURL: CORE_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const notificationApiClient = axios.create({
+  baseURL: NOTIFICATION_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -44,6 +53,12 @@ const configureClient = (client: AxiosInstance, label: string) => {
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (label === "NOTIFICATION API") {
+      console.log(`${label} REQUEST BASE URL:`, config.baseURL);
+      console.log(`${label} REQUEST URL:`, config.url);
+      console.log(`${label} TOKEN ATTACHED:`, Boolean(token));
     }
 
     return config;
@@ -74,6 +89,7 @@ const configureClient = (client: AxiosInstance, label: string) => {
 
 configureClient(apiClient, "AUTH API");
 configureClient(coreApiClient, "CORE API");
+configureClient(notificationApiClient, "NOTIFICATION API");
 
 apiClient
   .get("/health", { skipAuth: true })

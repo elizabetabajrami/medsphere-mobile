@@ -36,13 +36,20 @@ export type PatientTabParamList = {
   PatientHome: undefined;
   PatientDoctors: undefined;
   PatientAppointments: undefined;
+  PatientNotifications: undefined;
   PatientProfile: undefined;
 };
 
 export type DoctorStackParamList = {
-  DoctorHome: undefined;
-  DoctorAppointments: undefined;
+  DoctorTabs: NavigatorScreenParams<DoctorTabParamList> | undefined;
   AppointmentDetails: {
     appointmentId: string;
   };
+};
+
+export type DoctorTabParamList = {
+  DoctorHome: undefined;
+  DoctorAppointments: undefined;
+  DoctorNotifications: undefined;
+  DoctorProfile: undefined;
 };

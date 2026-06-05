@@ -33,4 +33,12 @@ export const endpoints = {
     updateStatus: (appointmentId: string) =>
       `/api/appointments/${appointmentId}/status`,
   },
+
+  notifications: {
+    list: "/api/notifications",
+    markAllRead: "/api/notifications/read-all",
+    markRead: (notificationId: string) =>
+      `/api/notifications/${notificationId}/read`,
+    delete: (notificationId: string) => `/api/notifications/${notificationId}`,
+  },
 };

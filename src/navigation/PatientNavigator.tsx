@@ -3,6 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppointmentDetailsScreen } from '../features/appointments/view/AppointmentDetailsScreen';
 import { BookAppointmentScreen } from '../features/appointments/view/BookAppointmentScreen';
+import { NotificationsScreen } from '../features/notifications/view/NotificationsScreen';
+import { useNotificationBadgeViewModel } from '../features/notifications/viewmodel/useNotificationBadgeViewModel';
 import { DoctorDetailsScreen } from '../features/patient/view/DoctorDetailsScreen';
 import { PatientAppointmentsScreen } from '../features/patient/view/PatientAppointmentsScreen';
 import { PatientDoctorsScreen } from '../features/patient/view/PatientDoctorsScreen';
@@ -18,48 +20,76 @@ type PatientNavigatorProps = {
   onLogout: () => void;
 };
 
-const PatientTabs = ({ onLogout }: PatientNavigatorProps) => (
-  <Tab.Navigator
-    backBehavior="history"
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarActiveTintColor: '#6B941F',
-      tabBarInactiveTintColor: '#98A2B3',
-      tabBarStyle: {
-        backgroundColor: '#FFFFFF',
-        borderTopColor: '#E8EEDF',
-        height: 68,
-        paddingBottom: 10,
-        paddingTop: 8,
-      },
-      tabBarLabelStyle: {
-        fontSize: 12,
-        fontWeight: '700',
-      },
-      tabBarIcon: ({ color, size }) => {
-        const icons = {
-          PatientHome: 'home-outline',
-          PatientDoctors: 'medkit-outline',
-          PatientAppointments: 'calendar-outline',
-          PatientProfile: 'person-outline',
-        } as const;
+const formatBadge = (count: number) => {
+  if (count <= 0) {
+    return undefined;
+  }
 
-        return <Ionicons name={icons[route.name]} size={size} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="PatientHome" component={PatientHomeScreen} options={{ title: 'Home' }} />
-    <Tab.Screen name="PatientDoctors" component={PatientDoctorsScreen} options={{ title: 'Doctors' }} />
-    <Tab.Screen
-      name="PatientAppointments"
-      component={PatientAppointmentsScreen}
-      options={{ title: 'Appointments' }}
-    />
-    <Tab.Screen name="PatientProfile" options={{ title: 'Profile' }}>
-      {() => <PatientProfileScreen onLogout={onLogout} />}
-    </Tab.Screen>
-  </Tab.Navigator>
-);
+  return count > 9 ? '9+' : count;
+};
+
+const PatientTabs = ({ onLogout }: PatientNavigatorProps) => {
+  const notificationBadge = useNotificationBadgeViewModel();
+
+  return (
+    <Tab.Navigator
+      backBehavior="history"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: '#6B941F',
+        tabBarInactiveTintColor: '#98A2B3',
+        tabBarBadge:
+          route.name === 'PatientNotifications'
+            ? formatBadge(notificationBadge.unreadCount)
+            : undefined,
+        tabBarBadgeStyle: {
+          backgroundColor: '#D92D20',
+          color: '#FFFFFF',
+          fontSize: 10,
+          fontWeight: '800',
+        },
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E8EEDF',
+          height: 68,
+          paddingBottom: 10,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '700',
+        },
+        tabBarIcon: ({ color, size }) => {
+          const icons = {
+            PatientHome: 'home-outline',
+            PatientDoctors: 'medkit-outline',
+            PatientAppointments: 'calendar-outline',
+            PatientNotifications: 'notifications-outline',
+            PatientProfile: 'person-outline',
+          } as const;
+
+          return <Ionicons name={icons[route.name]} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="PatientHome" component={PatientHomeScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="PatientDoctors" component={PatientDoctorsScreen} options={{ title: 'Doctors' }} />
+      <Tab.Screen
+        name="PatientAppointments"
+        component={PatientAppointmentsScreen}
+        options={{ title: 'Appointments' }}
+      />
+      <Tab.Screen name="PatientNotifications" options={{ title: 'Notifications' }}>
+        {() => (
+          <NotificationsScreen onUnreadCountChange={notificationBadge.setUnreadCount} />
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="PatientProfile" options={{ title: 'Profile' }}>
+        {() => <PatientProfileScreen onLogout={onLogout} />}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+};
 
 export const PatientNavigator = ({ onLogout }: PatientNavigatorProps) => (
   <Stack.Navigator

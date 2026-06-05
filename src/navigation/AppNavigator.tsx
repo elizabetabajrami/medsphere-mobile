@@ -32,7 +32,7 @@ export const AppNavigator = () => {
       {!role ? (
         <AuthNavigator onAuthenticated={handleAuthenticated} />
       ) : normalizedRole === "doctor" ? (
-        <DoctorNavigator />
+        <DoctorNavigator onLogout={handleLogout} />
       ) : (
         <PatientNavigator onLogout={handleLogout} />
       )}
