@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { getUser } from '../../../storage/tokenStorage';
-import { patientService } from '../../patient/service/patientService';
 import { appointmentService } from '../service/appointmentService';
 import type { Appointment, AvailableSlot } from '../model/Appointment';
 
@@ -73,22 +71,47 @@ const normalizeTimeForApi = (time?: string) => {
   return `${timeMatch[1]}:00`;
 };
 
-export const getSlotStartDateTime = (slot: AvailableSlot, selectedDate: string) => {
-  if (slot.start) {
-    return slot.start;
-  }
+const createLocalDateTimeIso = (selectedDate: string, time?: string) => {
+  const normalizedTime = normalizeTimeForApi(time);
 
-  const startTime = normalizeTimeForApi(slot.startTime || slot.time);
-
-  if (!selectedDate || !startTime) {
+  if (!selectedDate || !normalizedTime) {
     return '';
   }
 
-  return `${selectedDate}T${startTime}.000Z`;
+  const [year, month, day] = selectedDate.split('-').map(Number);
+  const [hour, minute] = normalizedTime.split(':').map(Number);
+  const date = new Date(year, month - 1, day, hour, minute, 0, 0);
+
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+};
+
+const getLocalTimePart = (value?: string) => {
+  if (!value) {
+    return '';
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return getTimePart(value);
+  }
+
+  return parsedDate.toTimeString().slice(0, 5);
+};
+
+export const getSlotStartDateTime = (slot: AvailableSlot, selectedDate: string) => {
+  const startTime = slot.startTime || slot.time;
+  const localDateTimeIso = createLocalDateTimeIso(selectedDate, startTime);
+
+  if (localDateTimeIso) {
+    return localDateTimeIso;
+  }
+
+  return slot.start || '';
 };
 
 export const getSlotDisplayTime = (slot: AvailableSlot) =>
-  slot.startTime || slot.time || getTimePart(slot.start) || '';
+  slot.startTime || slot.time || getLocalTimePart(slot.start) || '';
 
 const formatMinutesAsTime = (minutes: number) => {
   const hour = Math.floor(minutes / 60);
@@ -124,8 +147,8 @@ const createDailySlots = (selectedDate: string, durationMinutes: number): Availa
     const endTime = formatMinutesAsTime(minutes + durationMinutes);
 
     slots.push({
-      start: `${selectedDate}T${startTime}:00.000Z`,
-      end: `${selectedDate}T${endTime}:00.000Z`,
+      start: createLocalDateTimeIso(selectedDate, startTime),
+      end: createLocalDateTimeIso(selectedDate, endTime),
       startTime,
       endTime,
       durationMinutes,
@@ -138,28 +161,31 @@ const createDailySlots = (selectedDate: string, durationMinutes: number): Availa
 
 const createBookableSlots = (
   availableSlots: AvailableSlot[],
+  occupiedSlots: AvailableSlot[],
   appointments: Appointment[],
   selectedDate: string,
   appointmentId?: string,
 ) => {
   const availableTimes = new Set(
     availableSlots
-      .map((slot) =>
-        getTimePart(getSlotStartDateTime(slot, selectedDate)) ||
-        getTimePart(slot.startTime || slot.time),
-      )
+      .map(getSlotDisplayTime)
       .filter(Boolean),
   );
   const hasCompleteAvailabilitySignal = availableTimes.size > 0
     && availableTimes.size < EXPECTED_DAILY_SLOT_COUNT;
 
-  const bookedTimes = new Set(
-    appointments
+  const occupiedTimes = occupiedSlots
+    .map(getSlotDisplayTime)
+    .filter(Boolean);
+
+  const bookedTimes = new Set([
+    ...occupiedTimes,
+    ...appointments
       .filter((appointment) => isBlockingAppointment(appointment, appointmentId))
       .filter((appointment) => getDatePart(getAppointmentDateTime(appointment)) === selectedDate)
       .map(getAppointmentTime)
       .filter(Boolean),
-  );
+  ]);
 
   return createDailySlots(selectedDate, DEFAULT_SLOT_DURATION_MINUTES).map((slot) => {
     const slotTime = getSlotDisplayTime(slot);
@@ -176,11 +202,12 @@ const createBookableSlots = (
 
 const filterSlotsForSelectedDate = (
   slots: AvailableSlot[],
+  occupiedSlots: AvailableSlot[],
   appointments: Appointment[],
   selectedDate: string,
   appointmentId?: string,
 ) =>
-  createBookableSlots(slots, appointments, selectedDate, appointmentId);
+  createBookableSlots(slots, occupiedSlots, appointments, selectedDate, appointmentId);
 
 const createDateOptions = () => {
   const options: DateOption[] = [];
@@ -201,6 +228,10 @@ const createDateOptions = () => {
 };
 
 const getBookingErrorMessage = (err: unknown) => {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
   if (!isAxiosError(err)) {
     return 'Unable to book appointment. Please try again.';
   }
@@ -234,53 +265,6 @@ const getBookingErrorMessage = (err: unknown) => {
     : 'Unable to book appointment. Please try again.';
 };
 
-const isPatientProfileAlreadyCreated = (err: unknown) => {
-  if (!isAxiosError(err)) {
-    return false;
-  }
-
-  const status = err.response?.status;
-  const data = err.response?.data;
-  const message =
-    typeof data === 'object' && data
-      ? String((data as { message?: unknown }).message || '')
-      : typeof data === 'string'
-        ? data
-        : '';
-
-  return status === 409 || message.toLowerCase().includes('already');
-};
-
-const ensurePatientProfile = async () => {
-  const user = await getUser();
-
-  if (!user?.email) {
-    throw new Error('Unable to find your patient account.');
-  }
-
-  const firstName = user.firstName?.trim() || user.name?.trim().split(' ')[0] || 'Patient';
-  const lastName =
-    user.lastName?.trim() ||
-    user.name
-      ?.trim()
-      .split(' ')
-      .slice(1)
-      .join(' ') ||
-    'User';
-
-  try {
-    await patientService.createPatientProfile({
-      firstName,
-      lastName,
-      email: user.email,
-    });
-  } catch (err) {
-    if (!isPatientProfileAlreadyCreated(err)) {
-      throw err;
-    }
-  }
-};
-
 type BookingMode = 'book' | 'reschedule';
 
 export const useBookAppointmentViewModel = (
@@ -288,6 +272,7 @@ export const useBookAppointmentViewModel = (
   options?: {
     appointmentId?: string;
     mode?: BookingMode;
+    staffProfileId?: string;
   },
 ) => {
   const [dateOptions] = useState(createDateOptions);
@@ -302,6 +287,7 @@ export const useBookAppointmentViewModel = (
   const canConfirm = Boolean(selectedDate && selectedTime) && !isLoadingSlots;
   const mode = options?.mode || 'book';
   const appointmentId = options?.appointmentId;
+  const staffProfileId = options?.staffProfileId || doctorId;
 
   useEffect(() => {
     const loadAvailableSlots = async () => {
@@ -316,13 +302,14 @@ export const useBookAppointmentViewModel = (
         setError(null);
         setSelectedTime('');
 
-        const [slots, doctorAppointments] = await Promise.all([
+        const [slotAvailability, doctorAppointments] = await Promise.all([
           appointmentService.getAvailableSlots(doctorId, selectedDate),
           appointmentService.getDoctorAppointments(doctorId).catch(() => []),
         ]);
 
         setTimeSlots(filterSlotsForSelectedDate(
-          slots,
+          slotAvailability.availableSlots,
+          slotAvailability.occupiedSlots,
           doctorAppointments,
           selectedDate,
           appointmentId,
@@ -350,16 +337,16 @@ export const useBookAppointmentViewModel = (
       if (mode === 'reschedule' && appointmentId) {
         await appointmentService.rescheduleAppointment(appointmentId, {
           doctorId,
+          staffProfileId,
           date: selectedTime,
         });
 
         return true;
       }
 
-      await ensurePatientProfile();
-
       await appointmentService.bookAppointment({
         doctorId,
+        staffProfileId,
         date: selectedTime,
         reason: 'General consultation',
       });

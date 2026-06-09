@@ -21,29 +21,15 @@ import { authService } from '../service/authService';
 type ResetPasswordScreenProps = NativeStackScreenProps<AuthStackParamList, 'ResetPassword'>;
 
 export const ResetPasswordScreen = ({ navigation, route }: ResetPasswordScreenProps) => {
-  const initialToken = route.params?.token || '';
-  const [resetInput, setResetInput] = useState(initialToken);
+  const initialEmail = route.params?.email || '';
+  const initialCode = route.params?.code || '';
+  const [email, setEmail] = useState(initialEmail);
+  const [code, setCode] = useState(initialCode);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const getResetCode = () => {
-    const value = resetInput.trim();
-
-    if (!value) {
-      return '';
-    }
-
-    const tokenMatch = value.match(/[?&](token|code)=([^&]+)/);
-
-    if (tokenMatch?.[2]) {
-      return decodeURIComponent(tokenMatch[2]);
-    }
-
-    return value;
-  };
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -57,9 +43,15 @@ export const ResetPasswordScreen = ({ navigation, route }: ResetPasswordScreenPr
   const handleResetPassword = async () => {
     setError(null);
 
-    const token = getResetCode();
+    const normalizedEmail = email.trim();
+    const normalizedCode = code.trim();
 
-    if (!token) {
+    if (!normalizedEmail) {
+      setError('Email is required.');
+      return;
+    }
+
+    if (!normalizedCode) {
       setError('Reset code is required.');
       return;
     }
@@ -82,12 +74,13 @@ export const ResetPasswordScreen = ({ navigation, route }: ResetPasswordScreenPr
     try {
       setIsLoading(true);
       await authService.resetPassword({
-        token,
+        email: normalizedEmail,
+        code: normalizedCode,
         password,
       });
       setIsSuccessModalVisible(true);
     } catch {
-      setError('Unable to reset password. Please request a new link.');
+      setError('Unable to reset password. Please request a new code.');
     } finally {
       setIsLoading(false);
     }
@@ -115,9 +108,31 @@ export const ResetPasswordScreen = ({ navigation, route }: ResetPasswordScreenPr
           </View>
 
           <Text style={styles.brand}>Reset password</Text>
-          <Text style={styles.subtitle}>Paste the email code and create a new password.</Text>
+          <Text style={styles.subtitle}>Enter the email code and create a new password.</Text>
 
           <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color="#8A9581"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#A7B09E"
+                  style={styles.input}
+                  value={email}
+                />
+              </View>
+            </View>
+
             <View style={styles.field}>
               <Text style={styles.label}>Reset code</Text>
               <View style={styles.inputContainer}>
@@ -130,11 +145,13 @@ export const ResetPasswordScreen = ({ navigation, route }: ResetPasswordScreenPr
                 <TextInput
                   autoCapitalize="none"
                   autoCorrect={false}
-                  onChangeText={setResetInput}
-                  placeholder="Paste reset code"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  onChangeText={setCode}
+                  placeholder="Enter 6-digit code"
                   placeholderTextColor="#A7B09E"
                   style={styles.input}
-                  value={resetInput}
+                  value={code}
                 />
               </View>
             </View>

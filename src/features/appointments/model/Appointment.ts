@@ -72,12 +72,14 @@ export type Appointment = {
 
 export type BookAppointmentPayload = {
   doctorId: string;
+  staffProfileId?: string;
   date: string;
   reason: string;
 };
 
 export type RescheduleAppointmentPayload = {
   doctorId: string;
+  staffProfileId?: string;
   date: string;
 };
 
@@ -91,9 +93,15 @@ export type AvailableSlot = {
   isAvailable?: boolean;
 };
 
+export type SlotAvailability = {
+  availableSlots: AvailableSlot[];
+  occupiedSlots: AvailableSlot[];
+};
+
 export type PatientAppointment = {
   id: string;
   doctorId: string;
+  staffProfileId?: string;
   doctorName: string;
   specialty: string;
   date: string;

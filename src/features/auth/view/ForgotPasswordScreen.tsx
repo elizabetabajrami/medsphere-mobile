@@ -19,6 +19,16 @@ import { authService } from '../service/authService';
 
 type ForgotPasswordScreenProps = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
+const getForgotPasswordErrorMessage = (err: any) => {
+  const message = err.response?.data?.message;
+
+  if (typeof message === 'string') {
+    return message;
+  }
+
+  return 'Unable to send password reset request.';
+};
+
 export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +46,12 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
 
     try {
       setIsLoading(true);
-      await authService.forgotPassword(email.trim());
+      const normalizedEmail = email.trim();
+      await authService.forgotPassword(normalizedEmail);
       setMessage('Password reset code sent. Check your email and paste the code here.');
-    } catch {
-      setError('Unable to send password reset request.');
+      navigation.navigate('ResetPassword', { email: normalizedEmail });
+    } catch (err: any) {
+      setError(getForgotPasswordErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +125,7 @@ export const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) 
 
             <Pressable
               accessibilityRole="button"
-              onPress={() => navigation.navigate('ResetPassword', {})}
+              onPress={() => navigation.navigate('ResetPassword', { email: email.trim() || undefined })}
               style={styles.secondaryButton}
             >
               <Text style={styles.secondaryButtonText}>I have a reset code</Text>

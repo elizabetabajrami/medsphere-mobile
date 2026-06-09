@@ -12,9 +12,9 @@ declare module "axios" {
   }
 }
 
-const AUTH_BASE_URL = "http://192.168.1.10:3005";
-const CORE_BASE_URL = "http://192.168.1.10:3007";
-const NOTIFICATION_BASE_URL = "http://192.168.1.10:3008";
+const AUTH_BASE_URL = "http://192.168.178.143:3005";
+const CORE_BASE_URL = "http://192.168.178.143:3007";
+const NOTIFICATION_BASE_URL = "http://192.168.178.143:3008";
 
 export const apiClient = axios.create({
   baseURL: AUTH_BASE_URL,
@@ -43,23 +43,43 @@ export const notificationApiClient = axios.create({
 const configureClient = (client: AxiosInstance, label: string) => {
   console.log(`${label} BASE URL:`, client.defaults.baseURL);
 
+  const redactSensitiveData = (data: unknown) => {
+    if (!data) {
+      return data;
+    }
+
+    try {
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return parsed;
+      }
+
+      return {
+        ...parsed,
+        password: "password" in parsed ? "***" : undefined,
+        personalNumber: "personalNumber" in parsed ? "***" : undefined,
+      };
+    } catch {
+      return "[unparseable request data]";
+    }
+  };
+
   client.interceptors.request.use(async (config) => {
     if (config.skipAuth) {
       delete config.headers.Authorization;
-      return config;
+    } else {
+      const token = await getToken();
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
-    const token = await getToken();
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    if (label === "NOTIFICATION API") {
-      console.log(`${label} REQUEST BASE URL:`, config.baseURL);
-      console.log(`${label} REQUEST URL:`, config.url);
-      console.log(`${label} TOKEN ATTACHED:`, Boolean(token));
-    }
+    console.log(`${label} REQUEST BASE URL:`, config.baseURL);
+    console.log(`${label} REQUEST URL:`, config.url);
+    console.log(`${label} REQUEST METHOD:`, config.method);
+    console.log(`${label} REQUEST DATA:`, redactSensitiveData(config.data));
 
     return config;
   });
@@ -80,7 +100,7 @@ const configureClient = (client: AxiosInstance, label: string) => {
       console.log(`${label} RESPONSE STATUS:`, error.response?.status);
       console.log(`${label} RESPONSE DATA:`, error.response?.data);
       console.log(`${label} REQUEST METHOD:`, error.config?.method);
-      console.log(`${label} REQUEST DATA:`, error.config?.data);
+      console.log(`${label} REQUEST DATA:`, redactSensitiveData(error.config?.data));
       console.log("STATUS:", error.response?.status);
       return Promise.reject(error);
     },

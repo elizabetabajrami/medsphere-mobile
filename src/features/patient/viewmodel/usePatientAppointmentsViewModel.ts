@@ -101,6 +101,7 @@ const getAppointmentDate = (appointment: AppointmentResponse) =>
 const mapAppointment = (appointment: AppointmentResponse): PatientAppointment => ({
   id: appointment.id || appointment._id || getAppointmentDate(appointment) || `${Date.now()}`,
   doctorId: appointment.doctorId || appointment.doctor?.id || appointment.doctor?._id || '',
+  staffProfileId: appointment.staffProfileId,
   doctorName: getDoctorName(appointment),
   specialty: appointment.specialty || appointment.doctor?.specialty || 'Healthcare visit',
   date: formatDate(getAppointmentDate(appointment)),

@@ -20,6 +20,7 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
   const viewModel = useBookAppointmentViewModel(doctor.id, {
     appointmentId: appointment?.id,
     mode: isRescheduling ? 'reschedule' : 'book',
+    staffProfileId: doctor.staffProfileId || doctor.id,
   });
   const timeSlots = Array.isArray(viewModel.timeSlots) ? viewModel.timeSlots : [];
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);

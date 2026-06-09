@@ -3,12 +3,13 @@ export const endpoints = {
     login: "/api/auth/login",
     register: "/api/auth/register",
     verifyEmail: "/api/auth/verify-email",
+    resendVerification: "/api/auth/resend-verification",
     forgotPassword: "/api/auth/forgot-password",
     resetPassword: "/api/auth/reset-password",
   },
 
   doctors: {
-    list: "/api/staff/doctors",
+    list: "/api/public/staff",
     byId: (doctorId: string) => `/doctors/${doctorId}`,
     appointments: (doctorId: string) => `/api/staff/doctors/${doctorId}/appointments`,
     availableSlots: (doctorId: string, date: string) =>

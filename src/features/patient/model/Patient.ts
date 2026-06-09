@@ -8,6 +8,8 @@ export type Patient = {
 
 export type PatientDoctor = {
   id: string;
+  staffProfileId?: string;
+  userId?: string;
   name: string;
   specialty: string;
   department?: string;

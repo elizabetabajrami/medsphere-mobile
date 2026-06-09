@@ -5,9 +5,11 @@ import type {
   LoginCredentials,
   RegisterPayload,
   RegisterResponse,
+  ResendVerificationPayload,
   ResetPasswordPayload,
   VerifyEmailPayload,
 } from "../model/AuthTypes";
+import type { User } from "../model/User";
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -26,7 +28,10 @@ export const authService = {
   },
 
   async register(payload: RegisterPayload): Promise<RegisterResponse> {
-    console.log("REGISTER REQUEST:", payload);
+    console.log("REGISTER REQUEST:", {
+      ...payload,
+      personalNumber: payload.personalNumber ? "***" : undefined,
+    });
 
     const response = await apiClient.post<RegisterResponse>(
       endpoints.auth.register,
@@ -49,11 +54,27 @@ export const authService = {
     console.log("STATUS:", response.status);
   },
 
+  async resendVerification(payload: ResendVerificationPayload): Promise<void> {
+    const response = await apiClient.post(
+      endpoints.auth.resendVerification,
+      payload,
+      { skipAuth: true },
+    );
+
+    console.log("RESEND VERIFICATION RESPONSE:", response.data);
+    console.log("STATUS:", response.status);
+  },
+
   async forgotPassword(email: string): Promise<void> {
     const response = await apiClient.post(
-      endpoints.auth.forgotPassword,
-      { email },
-      { skipAuth: true },
+      `${endpoints.auth.forgotPassword}?platform=mobile`,
+      { email, platform: "mobile" },
+      {
+        skipAuth: true,
+        headers: {
+          "X-Client-Platform": "mobile",
+        },
+      },
     );
 
     console.log("FORGOT PASSWORD RESPONSE:", response.data);
@@ -71,10 +92,12 @@ export const authService = {
     console.log("STATUS:", response.status);
   },
 
-  async debugGetMe(): Promise<void> {
-    const response = await apiClient.get(endpoints.patients.me);
+  async debugGetMe(): Promise<User> {
+    const response = await apiClient.get<User>(endpoints.patients.me);
 
     console.log("DEBUG /api/users/me RESPONSE:", response.data);
     console.log("STATUS:", response.status);
+
+    return response.data;
   },
 };

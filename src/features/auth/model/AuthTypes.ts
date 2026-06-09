@@ -13,6 +13,7 @@ export type RegisterPayload = {
   email: string;
   password: string;
   personalNumber: string;
+  platform?: "mobile";
 };
 
 export type RegisterResponse = {
@@ -22,12 +23,22 @@ export type RegisterResponse = {
   user?: User;
 };
 
-export type VerifyEmailPayload = {
-  token: string;
+export type VerifyEmailPayload =
+  | {
+      code: string;
+    }
+  | {
+      token: string;
+    };
+
+export type ResendVerificationPayload = {
+  email: string;
+  platform?: "mobile";
 };
 
 export type ResetPasswordPayload = {
-  token: string;
+  email: string;
+  code: string;
   password: string;
 };
 

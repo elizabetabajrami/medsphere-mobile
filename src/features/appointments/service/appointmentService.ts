@@ -6,15 +6,23 @@ import type {
   AvailableSlot,
   BookAppointmentPayload,
   RescheduleAppointmentPayload,
+  SlotAvailability,
 } from '../model/Appointment';
 
 type AvailableSlotsResponse =
   | AvailableSlot[]
   | {
       availableSlots?: AvailableSlot[];
+      occupiedSlots?: AvailableSlot[];
       slots?: AvailableSlot[];
       timeSlots?: AvailableSlot[];
-      data?: AvailableSlot[] | { availableSlots?: AvailableSlot[]; slots?: AvailableSlot[] };
+      data?:
+        | AvailableSlot[]
+        | {
+            availableSlots?: AvailableSlot[];
+            occupiedSlots?: AvailableSlot[];
+            slots?: AvailableSlot[];
+          };
     };
 
 type AppointmentListResponse =
@@ -34,39 +42,49 @@ type AppointmentListResponse =
 
 export type AppointmentStatusAction = 'complete' | 'cancel' | 'no-show';
 
-const normalizeAvailableSlots = (payload: AvailableSlotsResponse): AvailableSlot[] => {
+const normalizeSlotList = (
+  payload: AvailableSlotsResponse,
+  preferredKey: 'availableSlots' | 'occupiedSlots',
+): AvailableSlot[] => {
   if (Array.isArray(payload)) {
-    return payload;
+    return preferredKey === 'availableSlots' ? payload : [];
   }
 
-  if (Array.isArray(payload.availableSlots)) {
-    return payload.availableSlots;
+  if (Array.isArray(payload[preferredKey])) {
+    return payload[preferredKey] || [];
   }
 
-  if (Array.isArray(payload.slots)) {
+  if (preferredKey === 'availableSlots' && Array.isArray(payload.slots)) {
     return payload.slots;
   }
 
-  if (Array.isArray(payload.timeSlots)) {
+  if (preferredKey === 'availableSlots' && Array.isArray(payload.timeSlots)) {
     return payload.timeSlots;
   }
 
-  if (Array.isArray(payload.data)) {
-    return payload.data;
+  const data = payload.data;
+
+  if (preferredKey === 'availableSlots' && Array.isArray(data)) {
+    return data;
   }
 
-  if (payload.data && typeof payload.data === 'object') {
-    if (Array.isArray(payload.data.availableSlots)) {
-      return payload.data.availableSlots;
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    if (Array.isArray(data[preferredKey])) {
+      return data[preferredKey] || [];
     }
 
-    if (Array.isArray(payload.data.slots)) {
-      return payload.data.slots;
+    if (preferredKey === 'availableSlots' && Array.isArray(data.slots)) {
+      return data.slots;
     }
   }
 
   return [];
 };
+
+const normalizeSlotAvailability = (payload: AvailableSlotsResponse): SlotAvailability => ({
+  availableSlots: normalizeSlotList(payload, 'availableSlots'),
+  occupiedSlots: normalizeSlotList(payload, 'occupiedSlots'),
+});
 
 const normalizeAppointments = (payload: AppointmentListResponse): Appointment[] => {
   if (Array.isArray(payload)) {
@@ -112,11 +130,11 @@ export const appointmentService = {
     return response.data;
   },
 
-  async getAvailableSlots(doctorId: string, date: string): Promise<AvailableSlot[]> {
+  async getAvailableSlots(doctorId: string, date: string): Promise<SlotAvailability> {
     const response = await coreApiClient.get<AvailableSlotsResponse>(
       endpoints.doctors.availableSlots(doctorId, date),
     );
-    return normalizeAvailableSlots(response.data);
+    return normalizeSlotAvailability(response.data);
   },
 
   async getPatientAppointments(patientId: string): Promise<Appointment[]> {

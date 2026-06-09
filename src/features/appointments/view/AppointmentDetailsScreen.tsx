@@ -37,6 +37,7 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
       appointment,
       doctor: {
         id: appointment.doctorId,
+        staffProfileId: appointment.staffProfileId || appointment.doctorId,
         name: appointment.doctorName,
         specialty: appointment.specialty,
         rating: '4.8',

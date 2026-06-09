@@ -27,9 +27,9 @@ export const VerifyEmailScreen = ({
   navigation,
   route,
 }: VerifyEmailScreenProps) => {
-  const viewModel = useVerifyEmailViewModel();
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const { email } = route.params;
+  const viewModel = useVerifyEmailViewModel(email);
 
   const handleVerifyEmail = async () => {
     const isVerified = await viewModel.verifyEmail();
@@ -71,7 +71,7 @@ export const VerifyEmailScreen = ({
 
           <Text style={styles.brand}>Verify your email</Text>
           <Text style={styles.subtitle}>
-            We sent a verification code/link to your email.
+            We sent a 6-digit verification code to your email.
           </Text>
           <Text style={styles.emailText}>{email}</Text>
 
@@ -88,16 +88,21 @@ export const VerifyEmailScreen = ({
                 <TextInput
                   autoCapitalize="none"
                   autoCorrect={false}
-                  onChangeText={viewModel.setToken}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  onChangeText={viewModel.setCode}
                   placeholder="Enter verification code"
                   placeholderTextColor="#A7B09E"
                   style={styles.input}
-                  value={viewModel.token}
+                  value={viewModel.code}
                 />
               </View>
             </View>
 
             <ErrorMessage message={viewModel.error} />
+            {viewModel.message ? (
+              <Text style={styles.messageText}>{viewModel.message}</Text>
+            ) : null}
 
             <Pressable
               accessibilityRole="button"
@@ -114,6 +119,17 @@ export const VerifyEmailScreen = ({
               ) : (
                 <Text style={styles.primaryButtonText}>Verify Email</Text>
               )}
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={viewModel.isResending}
+              onPress={viewModel.resendVerification}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>
+                {viewModel.isResending ? "Sending..." : "Resend code"}
+              </Text>
             </Pressable>
 
             <Pressable
@@ -257,5 +273,12 @@ const styles = StyleSheet.create({
     color: "#6B941F",
     fontSize: 14,
     fontWeight: "800",
+  },
+  messageText: {
+    color: "#4F7217",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
   },
 });

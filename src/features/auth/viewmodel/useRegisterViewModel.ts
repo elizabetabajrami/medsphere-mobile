@@ -1,5 +1,20 @@
 import { useState } from "react";
+import { savePendingPersonalNumber } from "../../../storage/tokenStorage";
 import { authService } from "../service/authService";
+
+const getRegisterErrorMessage = (err: any) => {
+  const message = err.response?.data?.message;
+
+  if (Array.isArray(message)) {
+    return message.join(", ");
+  }
+
+  if (typeof message === "string") {
+    return message;
+  }
+
+  return "Unable to register. Please try again.";
+};
 
 export const useRegisterViewModel = () => {
   const [firstName, setFirstName] = useState("");
@@ -40,16 +55,23 @@ export const useRegisterViewModel = () => {
         email: email.trim(),
         password,
         personalNumber: personalNumber.trim(),
+        platform: "mobile",
       });
 
       console.log("REGISTER RESPONSE:", response);
+
+      try {
+        await savePendingPersonalNumber(email.trim(), personalNumber.trim());
+      } catch (storageErr) {
+        console.log("SAVE PENDING PERSONAL NUMBER ERROR:", storageErr);
+      }
 
       return true;
     } catch (err: any) {
       console.log("REGISTER ERROR STATUS:", err.response?.status);
       console.log("REGISTER ERROR DATA:", err.response?.data);
       console.log("REGISTER ERROR FULL:", JSON.stringify(err.response?.data));
-      setError("Unable to register. Please try again.");
+      setError(getRegisterErrorMessage(err));
       return false;
     } finally {
       setIsLoading(false);

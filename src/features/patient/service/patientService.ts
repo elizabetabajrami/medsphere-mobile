@@ -8,6 +8,7 @@ type UserProfileResponse = {
   firstName?: string;
   lastName?: string;
   email: string;
+  personalNumber?: string;
   phone?: string;
   dateOfBirth?: string;
   gender?: string;
@@ -78,6 +79,7 @@ type CreatePatientPayload = {
   firstName: string;
   lastName: string;
   email: string;
+  personalNumber: string;
 };
 
 const getDoctorName = (doctor: DoctorResponse) => {
@@ -164,6 +166,8 @@ const isVisibleDoctor = (doctor: DoctorResponse) =>
 const getDoctorId = (doctor: DoctorResponse) =>
   doctor.id || doctor._id || doctor.userId || getDoctorName(doctor);
 
+const getStaffProfileId = (doctor: DoctorResponse) => doctor.id || doctor._id;
+
 const sortDoctorsByName = (doctors: PatientDoctor[]) =>
   [...doctors].sort((first, second) => first.name.localeCompare(second.name));
 
@@ -196,6 +200,8 @@ export const patientService = {
 
     return sortDoctorsByName(doctors.filter(isVisibleDoctor).map((doctor) => ({
       id: getDoctorId(doctor),
+      staffProfileId: getStaffProfileId(doctor),
+      userId: doctor.userId,
       name: getDoctorName(doctor),
       specialty: getDoctorSpecialty(doctor),
       department: getPrimaryDepartmentName(doctor),

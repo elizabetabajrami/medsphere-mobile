@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { saveRole, saveToken, saveUser } from "../../../storage/tokenStorage";
+import {
+  clearPendingPersonalNumber,
+  getPendingPersonalNumber,
+  saveRole,
+  saveToken,
+  saveUser,
+} from "../../../storage/tokenStorage";
 import type { UserRole } from "../model/AuthTypes";
 import { authService } from "../service/authService";
 
@@ -50,11 +56,33 @@ export const useLoginViewModel = () => {
         throw new Error("Token missing from login response");
       }
 
-      await saveToken(token);
-      await saveUser(user);
+      const loginEmail = user?.email || email.trim();
+      let pendingPersonalNumber: string | null = null;
 
       try {
-        await authService.debugGetMe();
+        pendingPersonalNumber = await getPendingPersonalNumber(loginEmail);
+      } catch (storageErr) {
+        console.log("GET PENDING PERSONAL NUMBER ERROR:", storageErr);
+      }
+
+      await saveToken(token);
+      await saveUser({
+        ...user,
+        personalNumber: user?.personalNumber || pendingPersonalNumber || undefined,
+      });
+
+      try {
+        const currentUser = await authService.debugGetMe();
+        await saveUser({
+          ...user,
+          ...currentUser,
+          personalNumber:
+            currentUser.personalNumber ||
+            user?.personalNumber ||
+            pendingPersonalNumber ||
+            undefined,
+          role: (currentUser.role || role) as UserRole,
+        });
       } catch (debugErr: any) {
         console.log("DEBUG /api/users/me ERROR STATUS:", debugErr.response?.status);
         console.log("DEBUG /api/users/me ERROR DATA:", debugErr.response?.data);
@@ -62,9 +90,19 @@ export const useLoginViewModel = () => {
 
       if (role) {
         await saveRole(role);
+        try {
+          await clearPendingPersonalNumber(loginEmail);
+        } catch (storageErr) {
+          console.log("CLEAR PENDING PERSONAL NUMBER ERROR:", storageErr);
+        }
         return role as UserRole;
       }
 
+      try {
+        await clearPendingPersonalNumber(loginEmail);
+      } catch (storageErr) {
+        console.log("CLEAR PENDING PERSONAL NUMBER ERROR:", storageErr);
+      }
       return "Patient" as UserRole;
     } catch (err: any) {
       console.log("LOGIN ERROR STATUS:", err.response?.status);
