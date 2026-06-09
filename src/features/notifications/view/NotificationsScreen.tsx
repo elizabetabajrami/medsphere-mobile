@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect } from 'react';
 import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { LoadingView } from '../../../shared/components/LoadingView';
 import type { NotificationItem } from '../model/Notification';
@@ -10,9 +11,10 @@ import { useNotificationsViewModel } from '../viewmodel/useNotificationsViewMode
 
 type NotificationsScreenProps = {
   onUnreadCountChange?: (count: number) => void;
+  onBackPress?: () => void;
 };
 
-export const NotificationsScreen = ({ onUnreadCountChange }: NotificationsScreenProps) => {
+export const NotificationsScreen = ({ onBackPress, onUnreadCountChange }: NotificationsScreenProps) => {
   const viewModel = useNotificationsViewModel();
   const { loadNotifications } = viewModel;
 
@@ -34,6 +36,9 @@ export const NotificationsScreen = ({ onUnreadCountChange }: NotificationsScreen
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {onBackPress ? (
+        <AppHeader title="Notifications" showBack onBackPress={onBackPress} />
+      ) : null}
       <ScrollView
         style={styles.screen}
         contentContainerStyle={styles.content}

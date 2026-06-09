@@ -20,6 +20,7 @@ export type AuthStackParamList = {
 
 export type PatientStackParamList = {
   PatientTabs: NavigatorScreenParams<PatientTabParamList> | undefined;
+  PatientNotifications: undefined;
   DoctorDetails: {
     doctor: PatientDoctor;
   };
@@ -37,12 +38,13 @@ export type PatientTabParamList = {
   PatientHome: undefined;
   PatientDoctors: undefined;
   PatientAppointments: undefined;
-  PatientNotifications: undefined;
+  PatientChat: undefined;
   PatientProfile: undefined;
 };
 
 export type DoctorStackParamList = {
   DoctorTabs: NavigatorScreenParams<DoctorTabParamList> | undefined;
+  DoctorNotifications: undefined;
   AppointmentDetails: {
     appointmentId: string;
   };
@@ -51,6 +53,6 @@ export type DoctorStackParamList = {
 export type DoctorTabParamList = {
   DoctorHome: undefined;
   DoctorAppointments: undefined;
-  DoctorNotifications: undefined;
+  DoctorChat: undefined;
   DoctorProfile: undefined;
 };

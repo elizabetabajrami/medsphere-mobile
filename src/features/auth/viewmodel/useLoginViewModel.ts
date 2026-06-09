@@ -19,14 +19,28 @@ const getLoginErrorMessage = (err: any) => {
   return "Unable to log in. Please try again.";
 };
 
+const needsEmailVerification = (err: any) => {
+  const status = err.response?.status;
+  const message = err.response?.data?.message;
+
+  return (
+    status === 403 &&
+    typeof message === "string" &&
+    (message.toLowerCase().includes("inactive") ||
+      message.toLowerCase().includes("verify"))
+  );
+};
+
 export const useLoginViewModel = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
   const login = async (): Promise<UserRole | null> => {
     setError(null);
+    setPendingVerificationEmail(null);
 
     if (!email.trim() || !password.trim()) {
       setError("Email and password are required.");
@@ -109,6 +123,11 @@ export const useLoginViewModel = () => {
       console.log("LOGIN ERROR DATA:", err.response?.data);
       console.log("LOGIN ERROR FULL:", JSON.stringify(err.response?.data));
       console.log("LOGIN ERROR:", err);
+      if (needsEmailVerification(err)) {
+        setPendingVerificationEmail(email.trim());
+        return null;
+      }
+
       setError(getLoginErrorMessage(err));
       return null;
     } finally {
@@ -123,6 +142,7 @@ export const useLoginViewModel = () => {
     setPassword,
     isLoading,
     error,
+    pendingVerificationEmail,
     login,
   };
 };

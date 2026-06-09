@@ -17,6 +17,7 @@ export const endpoints = {
   },
 
   patients: {
+    list: "/api/patients",
     create: "/api/patients",
     me: "/api/users/me",
     byId: (patientId: string) => `/patients/${patientId}`,
@@ -41,5 +42,12 @@ export const endpoints = {
     markRead: (notificationId: string) =>
       `/api/notifications/${notificationId}/read`,
     delete: (notificationId: string) => `/api/notifications/${notificationId}`,
+  },
+
+  chat: {
+    rooms: "/api/chat/rooms",
+    messages: (roomId: string) => `/api/chat/rooms/${roomId}/messages`,
+    markRead: (roomId: string) => `/api/chat/rooms/${roomId}/read`,
+    upload: (roomId: string) => `/api/chat/rooms/${roomId}/upload`,
   },
 };

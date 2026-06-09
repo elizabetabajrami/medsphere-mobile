@@ -32,6 +32,17 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
     }
   }, [viewModel.error]);
 
+  useEffect(() => {
+    if (!viewModel.pendingVerificationEmail) {
+      return;
+    }
+
+    navigation.navigate('VerifyEmail', {
+      email: viewModel.pendingVerificationEmail,
+      from: 'Login',
+    });
+  }, [navigation, viewModel.pendingVerificationEmail]);
+
   const handleLogin = async () => {
     const role = await viewModel.login();
 

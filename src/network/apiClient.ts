@@ -16,6 +16,8 @@ const AUTH_BASE_URL = "http://192.168.178.143:3005";
 const CORE_BASE_URL = "http://192.168.178.143:3007";
 const NOTIFICATION_BASE_URL = "http://192.168.178.143:3008";
 
+export const notificationSocketUrl = NOTIFICATION_BASE_URL;
+
 export const apiClient = axios.create({
   baseURL: AUTH_BASE_URL,
   timeout: 10000,
