@@ -227,13 +227,11 @@ const createDateOptions = () => {
   return options;
 };
 
-const getBookingErrorMessage = (err: unknown) => {
-  if (err instanceof Error) {
-    return err.message;
-  }
+const getBookingErrorMessage = (err: unknown, mode: BookingMode = 'book') => {
+  const action = mode === 'reschedule' ? 'reschedule appointment' : 'book appointment';
 
   if (!isAxiosError(err)) {
-    return 'Unable to book appointment. Please try again.';
+    return err instanceof Error ? err.message : `Unable to ${action}. Please try again.`;
   }
 
   const status = err.response?.status;
@@ -261,8 +259,8 @@ const getBookingErrorMessage = (err: unknown) => {
   }
 
   return status
-    ? `${status}: Unable to book appointment.`
-    : 'Unable to book appointment. Please try again.';
+    ? `${status}: Unable to ${action}.`
+    : `Unable to ${action}. Please try again.`;
 };
 
 type BookingMode = 'book' | 'reschedule';
@@ -336,8 +334,7 @@ export const useBookAppointmentViewModel = (
 
       if (mode === 'reschedule' && appointmentId) {
         await appointmentService.rescheduleAppointment(appointmentId, {
-          doctorId,
-          staffProfileId,
+          doctorId: staffProfileId,
           date: selectedTime,
         });
 
@@ -353,7 +350,7 @@ export const useBookAppointmentViewModel = (
 
       return true;
     } catch (err) {
-      setError(getBookingErrorMessage(err));
+      setError(getBookingErrorMessage(err, mode));
       return false;
     } finally {
       setIsLoading(false);
