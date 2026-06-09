@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import type { Appointment, PatientAppointment } from '../../appointments/model/Appointment';
 import { appointmentService } from '../../appointments/service/appointmentService';
+import { chatService } from '../../chat/service/chatService';
+import { notificationService } from '../../notifications/service/notificationService';
 import { getUser } from '../../../storage/tokenStorage';
 
 type AppointmentResponse = Appointment & {
@@ -81,6 +83,42 @@ const formatAppointmentTime = (dateValue: string, time?: string) => {
   });
 };
 
+const getNextVisitLabel = (appointment?: AppointmentResponse) => {
+  if (!appointment?.date) {
+    return 'None';
+  }
+
+  const visitDate = new Date(appointment.date);
+
+  if (Number.isNaN(visitDate.getTime())) {
+    return 'Scheduled';
+  }
+
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfVisit = new Date(
+    visitDate.getFullYear(),
+    visitDate.getMonth(),
+    visitDate.getDate(),
+  );
+  const dayDifference = Math.round(
+    (startOfVisit.getTime() - startOfToday.getTime()) / (24 * 60 * 60 * 1000),
+  );
+
+  if (dayDifference === 0) {
+    return 'Today';
+  }
+
+  if (dayDifference === 1) {
+    return 'Tomorrow';
+  }
+
+  return visitDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 const mapAppointment = (appointment: AppointmentResponse): PatientAppointment => ({
   id: appointment.id || appointment._id || appointment.date,
   doctorId: appointment.doctorId || appointment.doctor?.id || appointment.doctor?._id || '',
@@ -96,6 +134,9 @@ export const usePatientHomeViewModel = () => {
   const [patientName, setPatientName] = useState('Patient');
   const [nextAppointment, setNextAppointment] = useState<PatientAppointment | null>(null);
   const [isLoadingAppointment, setIsLoadingAppointment] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [nextVisitLabel, setNextVisitLabel] = useState('None');
 
   const loadHome = useCallback(async () => {
     const user = await getUser();
@@ -110,6 +151,10 @@ export const usePatientHomeViewModel = () => {
     }
 
     if (!user?.id) {
+      setNextAppointment(null);
+      setUnreadMessages(0);
+      setUnreadNotifications(0);
+      setNextVisitLabel('None');
       setIsLoadingAppointment(false);
       return;
     }
@@ -122,10 +167,31 @@ export const usePatientHomeViewModel = () => {
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
 
       setNextAppointment(upcomingAppointment ? mapAppointment(upcomingAppointment) : null);
+      setNextVisitLabel(getNextVisitLabel(upcomingAppointment));
     } catch {
       setNextAppointment(null);
+      setNextVisitLabel('None');
     } finally {
       setIsLoadingAppointment(false);
+    }
+
+    const [roomsResult, notificationsResult] = await Promise.allSettled([
+      chatService.getRooms(),
+      notificationService.getNotifications({ limit: 1 }),
+    ]);
+
+    if (roomsResult.status === 'fulfilled') {
+      setUnreadMessages(
+        roomsResult.value.data.reduce((total, room) => total + room.unreadCount, 0),
+      );
+    } else {
+      setUnreadMessages(0);
+    }
+
+    if (notificationsResult.status === 'fulfilled') {
+      setUnreadNotifications(notificationsResult.value.meta.unreadCount);
+    } else {
+      setUnreadNotifications(0);
     }
   }, []);
 
@@ -139,6 +205,9 @@ export const usePatientHomeViewModel = () => {
   return {
     patientName,
     nextAppointment,
+    unreadMessages,
+    unreadNotifications,
+    nextVisitLabel,
     isLoadingAppointment,
     quickActions,
     loadHome,

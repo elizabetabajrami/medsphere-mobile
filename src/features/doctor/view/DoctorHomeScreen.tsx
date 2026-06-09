@@ -39,6 +39,18 @@ export const DoctorHomeScreen = ({ navigation }: DoctorHomeScreenProps) => {
     }
   };
 
+  const goToAppointments = () => {
+    navigation.navigate('DoctorTabs', { screen: 'DoctorAppointments' });
+  };
+
+  const goToChat = () => {
+    navigation.navigate('DoctorTabs', { screen: 'DoctorChat' });
+  };
+
+  const goToNotifications = () => {
+    navigation.navigate('DoctorNotifications');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
@@ -57,6 +69,27 @@ export const DoctorHomeScreen = ({ navigation }: DoctorHomeScreenProps) => {
               <Text style={styles.welcomeSubtitle}>Here is your clinical schedule for today.</Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.statsRow}>
+          <DoctorStatBox
+            icon="calendar-outline"
+            value={String(viewModel.todayAppointments.length)}
+            label="Today"
+            onPress={goToAppointments}
+          />
+          <DoctorStatBox
+            icon="chatbubble-ellipses-outline"
+            value={String(viewModel.unreadMessages)}
+            label={viewModel.unreadMessages === 1 ? 'Message' : 'Messages'}
+            onPress={goToChat}
+          />
+          <DoctorStatBox
+            icon="notifications-outline"
+            value={String(viewModel.unreadNotifications)}
+            label="Alerts"
+            onPress={goToNotifications}
+          />
         </View>
 
         <View style={styles.sectionHeader}>
@@ -103,6 +136,34 @@ type AgendaCardProps = {
   appointment: Appointment;
   onViewDetails: () => void;
 };
+
+type DoctorStatBoxProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  label: string;
+  onPress: () => void;
+};
+
+const DoctorStatBox = ({ icon, value, label, onPress }: DoctorStatBoxProps) => (
+  <Pressable
+    accessibilityRole="button"
+    onPress={onPress}
+    style={({ pressed }) => [
+      styles.statBox,
+      pressed && styles.statBoxPressed,
+    ]}
+  >
+    <View style={styles.statIcon}>
+      <Ionicons name={icon} size={19} color="#6B941F" />
+    </View>
+    <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
+      {value}
+    </Text>
+    <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
+      {label}
+    </Text>
+  </Pressable>
+);
 
 const AgendaCard = ({ appointment, onViewDetails }: AgendaCardProps) => (
   <View style={styles.card}>
@@ -185,6 +246,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 5,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  statBox: {
+    flex: 1,
+    minHeight: 112,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E8EEDF',
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    shadowColor: '#23330D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  statBoxPressed: {
+    backgroundColor: '#F2F6EC',
+  },
+  statIcon: {
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F2F6EC',
+    borderRadius: 12,
+    marginBottom: 9,
+  },
+  statValue: {
+    color: '#1F271A',
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  statLabel: {
+    color: '#66715E',
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 4,
+    textAlign: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',

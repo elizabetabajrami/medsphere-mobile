@@ -14,13 +14,6 @@ type PatientHomeScreenProps = CompositeScreenProps<
   NativeStackScreenProps<PatientStackParamList>
 >;
 
-const services = [
-  { title: 'General Checkup', icon: 'medical-outline' },
-  { title: 'Cardiology', icon: 'heart-outline' },
-  { title: 'Dermatology', icon: 'sparkles-outline' },
-  { title: 'Emergency', icon: 'alert-circle-outline' },
-] as const;
-
 export const PatientHomeScreen = ({ navigation }: PatientHomeScreenProps) => {
   const viewModel = usePatientHomeViewModel();
   const { loadHome } = viewModel;
@@ -59,6 +52,25 @@ export const PatientHomeScreen = ({ navigation }: PatientHomeScreenProps) => {
     });
   };
 
+  const goToNotifications = () => {
+    navigation.navigate('PatientNotifications');
+  };
+
+  const goToChat = () => {
+    navigation.navigate('PatientTabs', { screen: 'PatientChat' });
+  };
+
+  const goToNextVisit = () => {
+    if (viewModel.nextAppointment) {
+      navigation.navigate('AppointmentDetails', {
+        appointment: viewModel.nextAppointment,
+      });
+      return;
+    }
+
+    navigation.navigate('PatientAppointments');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
@@ -89,20 +101,6 @@ export const PatientHomeScreen = ({ navigation }: PatientHomeScreenProps) => {
             <Text style={styles.heroButtonText}>Book Appointment</Text>
             <Ionicons name="arrow-forward" size={18} color="#6B941F" />
           </Pressable>
-        </View>
-
-        <View style={styles.notificationCard}>
-          <View style={styles.notificationIcon}>
-            <Ionicons name="notifications-outline" size={20} color="#6B941F" />
-          </View>
-          <View style={styles.notificationCopy}>
-            <Text style={styles.cardTitle}>Care notification</Text>
-            <Text style={styles.cardText}>
-              {viewModel.nextAppointment
-                ? 'Your next visit is ready in your appointment schedule.'
-                : 'No appointment alerts right now.'}
-            </Text>
-          </View>
         </View>
 
         <View style={styles.sectionHeader}>
@@ -193,22 +191,60 @@ export const PatientHomeScreen = ({ navigation }: PatientHomeScreenProps) => {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Explore Services</Text>
+          <Text style={styles.sectionTitle}>Care updates</Text>
         </View>
-        <View style={styles.servicesGrid}>
-          {services.map((service) => (
-            <View key={service.title} style={styles.serviceCard}>
-              <View style={styles.serviceIcon}>
-                <Ionicons name={service.icon} size={22} color="#6B941F" />
-              </View>
-              <Text style={styles.serviceText}>{service.title}</Text>
-            </View>
-          ))}
+        <View style={styles.careUpdatesRow}>
+          <CareUpdateItem
+            icon="chatbubble-ellipses-outline"
+            value={String(viewModel.unreadMessages)}
+            label={viewModel.unreadMessages === 1 ? 'Message' : 'Messages'}
+            onPress={goToChat}
+          />
+          <CareUpdateItem
+            icon="notifications-outline"
+            value={String(viewModel.unreadNotifications)}
+            label="Notifications"
+            onPress={goToNotifications}
+          />
+          <CareUpdateItem
+            icon="calendar-outline"
+            value={viewModel.nextVisitLabel}
+            label="Next visit"
+            onPress={goToNextVisit}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+type CareUpdateItemProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  label: string;
+  onPress: () => void;
+};
+
+const CareUpdateItem = ({ icon, value, label, onPress }: CareUpdateItemProps) => (
+  <Pressable
+    accessibilityRole="button"
+    onPress={onPress}
+    style={({ pressed }) => [
+      styles.careUpdateBox,
+      pressed && styles.careUpdateBoxPressed,
+    ]}
+  >
+    <View style={styles.careUpdateIcon}>
+      <Ionicons name={icon} size={19} color="#6B941F" />
+    </View>
+    <Text style={styles.careUpdateValue} numberOfLines={1} adjustsFontSizeToFit>
+      {value}
+    </Text>
+    <Text style={styles.careUpdateText} numberOfLines={1} adjustsFontSizeToFit>
+      {label}
+    </Text>
+  </Pressable>
+);
 
 const getQuickActionIcon = (action: string) => {
   if (action === 'Book Appointment') {
@@ -304,44 +340,6 @@ const styles = StyleSheet.create({
     color: '#6B941F',
     fontSize: 15,
     fontWeight: '800',
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8EEDF',
-    borderRadius: 18,
-    borderWidth: 1,
-    marginTop: 14,
-    padding: 14,
-    shadowColor: '#23330D',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 2,
-  },
-  notificationIcon: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F2F6EC',
-    borderRadius: 14,
-    marginRight: 12,
-  },
-  notificationCopy: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: '#303A28',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  cardText: {
-    color: '#66715E',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 3,
   },
   sectionHeader: {
     marginTop: 18,
@@ -508,35 +506,50 @@ const styles = StyleSheet.create({
     marginTop: 7,
     textAlign: 'center',
   },
-  servicesGrid: {
+  careUpdatesRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 10,
   },
-  serviceCard: {
-    width: '48.5%',
-    minHeight: 74,
-    flexDirection: 'row',
+  careUpdateBox: {
+    flex: 1,
+    minHeight: 112,
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     borderColor: '#E8EEDF',
     borderRadius: 18,
     borderWidth: 1,
-    padding: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    shadowColor: '#23330D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 2,
   },
-  serviceIcon: {
-    width: 38,
-    height: 38,
+  careUpdateBoxPressed: {
+    backgroundColor: '#F2F6EC',
+  },
+  careUpdateIcon: {
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F2F6EC',
-    borderRadius: 13,
-    marginRight: 10,
+    borderRadius: 12,
+    marginBottom: 9,
   },
-  serviceText: {
-    flex: 1,
-    color: '#303A28',
-    fontSize: 13,
+  careUpdateValue: {
+    color: '#1F271A',
+    fontSize: 18,
     fontWeight: '800',
+    textAlign: 'center',
+  },
+  careUpdateText: {
+    color: '#66715E',
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

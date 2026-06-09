@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { getUser } from '../../../storage/tokenStorage';
 import type { Appointment } from '../../appointments/model/Appointment';
 import { appointmentService } from '../../appointments/service/appointmentService';
+import { chatService } from '../../chat/service/chatService';
+import { notificationService } from '../../notifications/service/notificationService';
 import { doctorService } from '../service/doctorService';
 import { isTodayAppointment } from '../utils/appointmentFormatters';
 
@@ -20,6 +22,8 @@ export const useDoctorHomeViewModel = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const loadHome = useCallback(async () => {
     setError(null);
@@ -44,6 +48,25 @@ export const useDoctorHomeViewModel = () => {
       } else {
         setError('Unable to load today appointments.');
       }
+
+      const [roomsResult, notificationsResult] = await Promise.allSettled([
+        chatService.getRooms(),
+        notificationService.getNotifications({ limit: 1 }),
+      ]);
+
+      if (roomsResult.status === 'fulfilled') {
+        setUnreadMessages(
+          roomsResult.value.data.reduce((total, room) => total + room.unreadCount, 0),
+        );
+      } else {
+        setUnreadMessages(0);
+      }
+
+      if (notificationsResult.status === 'fulfilled') {
+        setUnreadNotifications(notificationsResult.value.meta.unreadCount);
+      } else {
+        setUnreadNotifications(0);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +81,8 @@ export const useDoctorHomeViewModel = () => {
     welcomeMessage: `Welcome, Dr. ${doctorName}`,
     doctorName,
     todayAppointments,
+    unreadMessages,
+    unreadNotifications,
     isLoading,
     error,
     loadHome,
