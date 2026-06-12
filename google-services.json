@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1082737036046",
+    "project_id": "medsphere-95f6b",
+    "storage_bucket": "medsphere-95f6b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082737036046:android:230049ea7b2921761aa55f",
+        "android_client_info": {
+          "package_name": "com.elizabetabajrami1.medspheremobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbhtxfGZiF8xORejSowBzsnqpbQVpwjxA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { UserRole } from "../features/auth/model/AuthTypes";
+import { pushNotificationService } from "../features/notifications/service/pushNotificationService";
 import { AuthNavigator } from "./AuthNavigator";
 import { DoctorNavigator } from "./DoctorNavigator";
 import { PatientNavigator } from "./PatientNavigator";
@@ -26,6 +27,14 @@ export const AppNavigator = () => {
   };
 
   const normalizedRole = role?.toLowerCase();
+
+  useEffect(() => {
+    if (!role) return;
+
+    pushNotificationService.registerCurrentDevice().catch((error) => {
+      console.log("PUSH REGISTRATION ERROR:", error);
+    });
+  }, [role]);
 
   return (
     <NavigationContainer linking={linking}>

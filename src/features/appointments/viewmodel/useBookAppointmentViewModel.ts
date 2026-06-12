@@ -42,10 +42,10 @@ const getTimePart = (value?: string) => {
     return '';
   }
 
-  const timeMatch = value.match(/T?(\d{2}:\d{2})/);
+  const timeMatch = value.match(/T?(\d{1,2}):(\d{2})(?::\d{2})?/);
 
   if (timeMatch) {
-    return timeMatch[1];
+    return `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
   }
 
   const parsedDate = new Date(value);
@@ -57,18 +57,28 @@ const getTimePart = (value?: string) => {
   return '';
 };
 
-const normalizeTimeForApi = (time?: string) => {
-  if (!time) {
+const normalizeTimePart = (value?: string) => {
+  if (!value) {
     return '';
   }
 
-  const timeMatch = time.match(/(\d{2}:\d{2})(?::\d{2})?/);
+  const timeMatch = value.match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
 
   if (!timeMatch) {
     return '';
   }
 
-  return `${timeMatch[1]}:00`;
+  return `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+};
+
+const normalizeTimeForApi = (time?: string) => {
+  const normalizedTime = normalizeTimePart(time);
+
+  if (!normalizedTime) {
+    return '';
+  }
+
+  return `${normalizedTime}:00`;
 };
 
 const createLocalDateTimeIso = (selectedDate: string, time?: string) => {
@@ -93,7 +103,7 @@ const getLocalTimePart = (value?: string) => {
   const parsedDate = new Date(value);
 
   if (Number.isNaN(parsedDate.getTime())) {
-    return getTimePart(value);
+    return normalizeTimePart(value);
   }
 
   return parsedDate.toTimeString().slice(0, 5);
@@ -111,7 +121,10 @@ export const getSlotStartDateTime = (slot: AvailableSlot, selectedDate: string) 
 };
 
 export const getSlotDisplayTime = (slot: AvailableSlot) =>
-  slot.startTime || slot.time || getLocalTimePart(slot.start) || '';
+  normalizeTimePart(slot.startTime)
+    || normalizeTimePart(slot.time)
+    || normalizeTimePart(getLocalTimePart(slot.start))
+    || '';
 
 const formatMinutesAsTime = (minutes: number) => {
   const hour = Math.floor(minutes / 60);
@@ -124,7 +137,8 @@ const getAppointmentDateTime = (appointment: Appointment) =>
   appointment.date || appointment.appointmentDate || appointment.scheduledAt || appointment.start;
 
 const getAppointmentTime = (appointment: Appointment) =>
-  getTimePart(getAppointmentDateTime(appointment)) || getTimePart(appointment.startTime);
+  getTimePart(getAppointmentDateTime(appointment))
+    || normalizeTimePart(appointment.startTime);
 
 const getAppointmentId = (appointment: Appointment) => appointment.id || appointment._id || '';
 

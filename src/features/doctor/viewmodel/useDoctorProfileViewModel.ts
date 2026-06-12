@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { clearSession, getUser, saveUser } from '../../../storage/tokenStorage';
 import { appointmentService } from '../../appointments/service/appointmentService';
 import { doctorService } from '../service/doctorService';
+import { pushNotificationService } from '../../notifications/service/pushNotificationService';
 
 type DoctorProfile = {
   name: string;
@@ -93,6 +94,9 @@ export const useDoctorProfileViewModel = () => {
   }, [loadProfile]);
 
   const logout = useCallback(async () => {
+    await pushNotificationService.unregisterCurrentDevice().catch((error) => {
+      console.log('PUSH UNREGISTER ERROR:', error);
+    });
     await clearSession();
     return true;
   }, []);

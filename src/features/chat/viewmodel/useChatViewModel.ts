@@ -121,11 +121,24 @@ export const useChatViewModel = ({ role }: UseChatViewModelParams) => {
     getToken().then((token) => {
       if (!mounted || !token) return;
 
+      console.log('CHAT SOCKET CONNECTING:', {
+        url: notificationSocketUrl,
+        tokenLength: token.length,
+      });
+
       const socket = io(notificationSocketUrl, { auth: { token } });
       socketRef.current = socket;
 
       socket.on('connect', () => setIsConnected(true));
       socket.on('disconnect', () => setIsConnected(false));
+      socket.on('connect_error', (error) => {
+        console.log('CHAT SOCKET CONNECT ERROR:', {
+          url: notificationSocketUrl,
+          tokenLength: token.length,
+          message: error.message,
+        });
+        setIsConnected(false);
+      });
 
       socket.on('chat:message', (message: ChatMessage) => {
         const selectedRoomId = activeRoomIdRef.current;

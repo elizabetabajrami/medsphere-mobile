@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect } from 'react';
-import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { LoadingView } from '../../../shared/components/LoadingView';
 import type { NotificationItem } from '../model/Notification';
+import { notificationService } from '../service/notificationService';
 import { useNotificationsViewModel } from '../viewmodel/useNotificationsViewModel';
 
 type NotificationsScreenProps = {
@@ -16,6 +17,7 @@ type NotificationsScreenProps = {
 
 export const NotificationsScreen = ({ onBackPress, onUnreadCountChange }: NotificationsScreenProps) => {
   const viewModel = useNotificationsViewModel();
+  const [isSchedulingTest, setIsSchedulingTest] = useState(false);
   const { loadNotifications } = viewModel;
 
   useFocusEffect(
@@ -31,6 +33,21 @@ export const NotificationsScreen = ({ onBackPress, onUnreadCountChange }: Notifi
   const handleNotificationPress = (notification: NotificationItem) => {
     if (!notification.isRead) {
       viewModel.markRead(notification.id);
+    }
+  };
+
+  const handleTestPush = async () => {
+    try {
+      setIsSchedulingTest(true);
+      await notificationService.scheduleTestPush(10);
+      Alert.alert(
+        'Push scheduled',
+        'Close MedSphere now. The notification should arrive in about 10 seconds.',
+      );
+    } catch {
+      Alert.alert('Unable to schedule push', 'Please try again.');
+    } finally {
+      setIsSchedulingTest(false);
     }
   };
 
@@ -62,17 +79,28 @@ export const NotificationsScreen = ({ onBackPress, onUnreadCountChange }: Notifi
             </Text>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            disabled={viewModel.unreadCount === 0 || viewModel.isUpdating}
-            onPress={viewModel.markAllRead}
-            style={[
-              styles.markAllButton,
-              (viewModel.unreadCount === 0 || viewModel.isUpdating) && styles.disabledButton,
-            ]}
-          >
-            <Text style={styles.markAllText}>Mark all as read</Text>
-          </Pressable>
+          <View style={styles.headingActions}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={isSchedulingTest}
+              onPress={handleTestPush}
+              style={[styles.testButton, isSchedulingTest && styles.disabledButton]}
+            >
+              <Ionicons name="paper-plane-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.testButtonText}>Test push</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={viewModel.unreadCount === 0 || viewModel.isUpdating}
+              onPress={viewModel.markAllRead}
+              style={[
+                styles.markAllButton,
+                (viewModel.unreadCount === 0 || viewModel.isUpdating) && styles.disabledButton,
+              ]}
+            >
+              <Text style={styles.markAllText}>Mark all as read</Text>
+            </Pressable>
+          </View>
         </View>
 
         <ErrorMessage message={viewModel.error} />
@@ -184,6 +212,25 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 12,
+  },
+  headingActions: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  testButton: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: '#6B941F',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+  },
+  testButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
   },
   markAllText: {
     color: '#6B941F',

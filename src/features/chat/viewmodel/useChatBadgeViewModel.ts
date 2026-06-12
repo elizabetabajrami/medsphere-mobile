@@ -28,7 +28,20 @@ export const useChatBadgeViewModel = () => {
     Promise.all([getToken(), getUser()]).then(([token, user]) => {
       if (!mounted || !token) return;
 
+      console.log('CHAT BADGE SOCKET CONNECTING:', {
+        url: notificationSocketUrl,
+        tokenLength: token.length,
+      });
+
       socket = io(notificationSocketUrl, { auth: { token } });
+
+      socket.on('connect_error', (error) => {
+        console.log('CHAT BADGE SOCKET CONNECT ERROR:', {
+          url: notificationSocketUrl,
+          tokenLength: token.length,
+          message: error.message,
+        });
+      });
 
       socket.on('chat:message', (message: ChatMessage) => {
         if (message.senderId === user?.id) return;

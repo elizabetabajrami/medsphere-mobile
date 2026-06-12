@@ -38,6 +38,8 @@ export const endpoints = {
 
   notifications: {
     list: "/api/notifications",
+    pushTokens: "/api/notifications/push-tokens",
+    pushTest: "/api/notifications/push-test",
     markAllRead: "/api/notifications/read-all",
     markRead: (notificationId: string) =>
       `/api/notifications/${notificationId}/read`,

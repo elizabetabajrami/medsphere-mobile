@@ -81,11 +81,29 @@ export const chatService = {
   },
 
   async createRoom(contact: ChatContact): Promise<ChatRoom> {
-    const response = await notificationApiClient.post<unknown>(endpoints.chat.rooms, {
+    const payload = {
       participantId: contact.id,
       participantRole: contact.role,
-    });
-    return item<ChatRoom>(response.data);
+    };
+
+    try {
+      const response = await notificationApiClient.post<unknown>(endpoints.chat.rooms, payload);
+      console.log('CHAT CREATE ROOM RESPONSE:', response.status, response.data);
+      return item<ChatRoom>(response.data);
+    } catch (error: unknown) {
+      const maybeError = error as {
+        message?: string;
+        response?: { status?: number; data?: unknown };
+      };
+
+      console.log('CHAT CREATE ROOM ERROR:', {
+        message: maybeError.message,
+        status: maybeError.response?.status,
+        data: maybeError.response?.data,
+        payload,
+      });
+      throw error;
+    }
   },
 
   async sendMessage(roomId: string, content: string): Promise<ChatMessage> {

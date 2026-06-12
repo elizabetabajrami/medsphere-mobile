@@ -126,7 +126,7 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
               <Pressable
                 key={slotStart || slotDisplayTime}
                 accessibilityRole="button"
-                disabled={!slotStart}
+                disabled={!slotStart || isUnavailable}
                 onPress={() => viewModel.selectTimeSlot(slot)}
                 style={[
                   styles.timeSlot,
