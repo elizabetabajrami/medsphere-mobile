@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,7 +15,7 @@ import {
 import type { UserRole } from '../model/AuthTypes';
 import { useLoginViewModel } from '../viewmodel/useLoginViewModel';
 import { AppHeader } from '../../../shared/components/AppHeader';
-import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
+import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import type { AuthStackParamList } from '../../../navigation/types';
 
 type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'> & {
@@ -24,13 +24,6 @@ type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'> & {
 
 export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) => {
   const viewModel = useLoginViewModel();
-  const [loginError, setLoginError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (viewModel.error) {
-      setLoginError(viewModel.error);
-    }
-  }, [viewModel.error]);
 
   useEffect(() => {
     if (!viewModel.pendingVerificationEmail) {
@@ -125,6 +118,8 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
               <Text style={styles.forgotText}>Forgot password?</Text>
             </Pressable>
 
+            <ErrorMessage message={viewModel.error} />
+
             <Pressable
               accessibilityRole="button"
               disabled={viewModel.isLoading}
@@ -151,15 +146,6 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
           </View>
         </View>
       </ScrollView>
-
-      <AppFeedbackModal
-        visible={Boolean(loginError)}
-        type="error"
-        title="Sign In Failed"
-        message={loginError || ''}
-        primaryButtonText="Try Again"
-        onClose={() => setLoginError(null)}
-      />
     </KeyboardAvoidingView>
   );
 };

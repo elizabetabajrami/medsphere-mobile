@@ -12,9 +12,9 @@ declare module "axios" {
   }
 }
 
-const AUTH_BASE_URL = "http://192.168.1.11:3005";
-const CORE_BASE_URL = "http://192.168.1.11:3007";
-const NOTIFICATION_BASE_URL = "http://192.168.1.11:3008";
+const AUTH_BASE_URL = "http://192.168.1.8:3005";
+const CORE_BASE_URL = "http://192.168.1.8:3007";
+const NOTIFICATION_BASE_URL = "http://192.168.1.8:3008";
 
 export const notificationSocketUrl = NOTIFICATION_BASE_URL;
 
@@ -102,7 +102,10 @@ const configureClient = (client: AxiosInstance, label: string) => {
       console.log(`${label} RESPONSE STATUS:`, error.response?.status);
       console.log(`${label} RESPONSE DATA:`, error.response?.data);
       console.log(`${label} REQUEST METHOD:`, error.config?.method);
-      console.log(`${label} REQUEST DATA:`, redactSensitiveData(error.config?.data));
+      console.log(
+        `${label} REQUEST DATA:`,
+        redactSensitiveData(error.config?.data),
+      );
       console.log("STATUS:", error.response?.status);
       return Promise.reject(error);
     },

@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useMemo } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { DoctorStackParamList } from '../../../navigation/types';
+import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import { AppHeader } from '../../../shared/components/AppHeader';
 import {
   formatAppointmentDate,
@@ -25,6 +26,8 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
   const viewModel = useDoctorAppointmentDetailsViewModel();
   const { appointment, loadAppointment } = viewModel;
   const appointmentId = route.params.appointmentId;
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,7 +63,8 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
     const didUpdate = await viewModel.updateStatus(appointmentId, action, reason);
 
     if (didUpdate) {
-      Alert.alert('Success', successMessage);
+      setIsCancelModalVisible(false);
+      setSuccessMessage(successMessage);
       await loadAppointment(appointmentId);
     }
   };
@@ -70,6 +74,8 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
   const markNoShow = () =>
     handleStatusAction('no-show', 'Appointment marked as no-show.');
   const cancelAppointment = () =>
+    setIsCancelModalVisible(true);
+  const confirmCancelAppointment = () =>
     handleStatusAction('cancel', 'Appointment cancelled successfully.', 'Cancelled by doctor');
 
   return (
@@ -146,6 +152,27 @@ export const AppointmentDetailsScreen = ({ navigation, route }: AppointmentDetai
           </>
         ) : null}
       </ScrollView>
+
+      <AppFeedbackModal
+        visible={isCancelModalVisible}
+        type="error"
+        title="Cancel appointment?"
+        message="This appointment will be marked as cancelled."
+        primaryButtonText={viewModel.isUpdating ? 'Cancelling...' : 'Cancel Appointment'}
+        primaryButtonDisabled={viewModel.isUpdating}
+        secondaryButtonText="Keep Appointment"
+        onPrimaryPress={confirmCancelAppointment}
+        onClose={() => setIsCancelModalVisible(false)}
+      />
+
+      <AppFeedbackModal
+        visible={Boolean(successMessage)}
+        type="success"
+        title="Status updated"
+        message={successMessage || ''}
+        primaryButtonText="Done"
+        onClose={() => setSuccessMessage(null)}
+      />
     </SafeAreaView>
   );
 };

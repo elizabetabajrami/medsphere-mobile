@@ -3,7 +3,24 @@ import { savePendingPersonalNumber } from "../../../storage/tokenStorage";
 import { authService } from "../service/authService";
 
 const getRegisterErrorMessage = (err: any) => {
+  const status = err.response?.status;
   const message = err.response?.data?.message;
+  const normalizedMessage = Array.isArray(message)
+    ? message.join(" ").toLowerCase()
+    : typeof message === "string"
+      ? message.toLowerCase()
+      : "";
+
+  if (
+    status === 409 ||
+    normalizedMessage.includes("already") ||
+    normalizedMessage.includes("exists") ||
+    normalizedMessage.includes("duplicate") ||
+    normalizedMessage.includes("taken") ||
+    normalizedMessage.includes("used")
+  ) {
+    return "This email is already in use. Please sign in or use another email.";
+  }
 
   if (Array.isArray(message)) {
     return message.join(", ");

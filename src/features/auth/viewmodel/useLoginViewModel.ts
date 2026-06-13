@@ -10,7 +10,26 @@ import type { UserRole } from "../model/AuthTypes";
 import { authService } from "../service/authService";
 
 const getLoginErrorMessage = (err: any) => {
+  const status = err.response?.status;
   const message = err.response?.data?.message;
+  const normalizedMessage = Array.isArray(message)
+    ? message.join(" ").toLowerCase()
+    : typeof message === "string"
+      ? message.toLowerCase()
+      : "";
+
+  if (
+    status === 400 ||
+    status === 401 ||
+    normalizedMessage.includes("invalid") ||
+    normalizedMessage.includes("incorrect") ||
+    normalizedMessage.includes("credential") ||
+    normalizedMessage.includes("unauthorized") ||
+    normalizedMessage.includes("not found") ||
+    normalizedMessage.includes("password")
+  ) {
+    return "The email or password is incorrect. Please check your details and try again.";
+  }
 
   if (typeof message === "string") {
     return message;
