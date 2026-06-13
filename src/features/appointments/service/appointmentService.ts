@@ -126,13 +126,25 @@ const normalizeAppointments = (payload: AppointmentListResponse): Appointment[] 
 
 export const appointmentService = {
   async bookAppointment(payload: BookAppointmentPayload): Promise<Appointment> {
-    const response = await coreApiClient.post<Appointment>(endpoints.appointments.book, payload);
+    const { date, ...rest } = payload;
+    const response = await coreApiClient.post<Appointment>(endpoints.appointments.book, {
+      ...rest,
+      scheduledAt: date,
+    });
     return response.data;
   },
 
   async getAvailableSlots(doctorId: string, date: string): Promise<SlotAvailability> {
     const response = await coreApiClient.get<AvailableSlotsResponse>(
       endpoints.doctors.availableSlots(doctorId, date),
+      {
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+        params: {
+          refresh: Date.now(),
+        },
+      },
     );
     return normalizeSlotAvailability(response.data);
   },
@@ -140,6 +152,14 @@ export const appointmentService = {
   async getPatientAppointments(patientId: string): Promise<Appointment[]> {
     const response = await coreApiClient.get<AppointmentListResponse>(
       endpoints.appointments.patientMine,
+      {
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+        params: {
+          refresh: Date.now(),
+        },
+      },
     );
     return normalizeAppointments(response.data);
   },
@@ -147,6 +167,14 @@ export const appointmentService = {
   async getDoctorAppointments(doctorId: string): Promise<Appointment[]> {
     const response = await coreApiClient.get<AppointmentListResponse>(
       doctorId ? endpoints.doctors.appointments(doctorId) : endpoints.appointments.doctorMine,
+      {
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+        params: {
+          refresh: Date.now(),
+        },
+      },
     );
     return normalizeAppointments(response.data);
   },
@@ -181,9 +209,13 @@ export const appointmentService = {
     appointmentId: string,
     payload: RescheduleAppointmentPayload,
   ): Promise<Appointment> {
+    const { date, ...rest } = payload;
     const response = await coreApiClient.patch<Appointment>(
       endpoints.appointments.reschedule(appointmentId),
-      payload,
+      {
+        ...rest,
+        scheduledAt: date,
+      },
     );
     return response.data;
   },

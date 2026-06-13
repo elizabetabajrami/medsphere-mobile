@@ -68,6 +68,15 @@ const formatAppointmentDate = (dateValue: string) => {
 
 const formatAppointmentTime = (dateValue: string, time?: string) => {
   if (time) {
+    const [hours, minutes] = time.split(':').map(Number);
+
+    if (Number.isInteger(hours) && Number.isInteger(minutes)) {
+      return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
+
     return time;
   }
 
@@ -126,7 +135,10 @@ const mapAppointment = (appointment: AppointmentResponse): PatientAppointment =>
   doctorName: getDoctorName(appointment),
   specialty: appointment.specialty || appointment.doctor?.specialty || 'Healthcare visit',
   date: formatAppointmentDate(appointment.date),
-  time: formatAppointmentTime(appointment.date, appointment.time),
+  time: formatAppointmentTime(
+    appointment.date,
+    appointment.time || appointment.startTime,
+  ),
   status: formatStatus(appointment.status),
 });
 

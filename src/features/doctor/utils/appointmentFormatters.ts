@@ -54,6 +54,17 @@ export const formatAppointmentDate = (appointment: Appointment) => {
 };
 
 export const formatAppointmentTime = (appointment: Appointment) => {
+  if (appointment.startTime) {
+    const [hours, minutes] = appointment.startTime.split(':').map(Number);
+
+    if (Number.isInteger(hours) && Number.isInteger(minutes)) {
+      return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+  }
+
   const appointmentDate = getAppointmentDateTime(appointment);
 
   if (!appointmentDate || Number.isNaN(appointmentDate.getTime())) {

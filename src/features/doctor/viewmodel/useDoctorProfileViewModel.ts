@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { clearSession, getUser, saveUser } from '../../../storage/tokenStorage';
-import { appointmentService } from '../../appointments/service/appointmentService';
 import { doctorService } from '../service/doctorService';
 import { pushNotificationService } from '../../notifications/service/pushNotificationService';
 
@@ -43,15 +42,17 @@ export const useDoctorProfileViewModel = () => {
     try {
       setIsLoading(true);
 
-      const [userResult, appointmentResult] = await Promise.allSettled([
+      const [userResult, staffResult] = await Promise.allSettled([
         doctorService.getMyProfile(),
-        appointmentService.getDoctorAppointments(''),
+        doctorService.getMyStaffProfile(),
       ]);
 
       const storedUser = await getUser();
       const user = userResult.status === 'fulfilled' ? userResult.value : storedUser;
-      const firstAppointment =
-        appointmentResult.status === 'fulfilled' ? appointmentResult.value[0] : undefined;
+      const staff = staffResult.status === 'fulfilled' ? staffResult.value : undefined;
+      const primaryDepartment = staff?.departments?.find(
+        (assignment) => assignment.isPrimary,
+      ) ?? staff?.departments?.[0];
 
       if (!user) {
         setError('Unable to load profile.');
@@ -62,12 +63,8 @@ export const useDoctorProfileViewModel = () => {
         name: getDisplayName(user),
         email: user.email,
         phone: user.phone || 'Not provided',
-        department: firstAppointment?.department?.name || 'Not provided',
-        specialization:
-          firstAppointment?.staff?.specialization ||
-          firstAppointment?.doctor?.specialization ||
-          firstAppointment?.doctor?.specialty ||
-          'Not provided',
+        department: primaryDepartment?.department?.name || 'Not provided',
+        specialization: staff?.specialization || 'Not provided',
       };
 
       setProfile(updatedProfile);

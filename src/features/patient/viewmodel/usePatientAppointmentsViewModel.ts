@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Appointment, PatientAppointment } from '../../appointments/model/Appointment';
 import { appointmentService } from '../../appointments/service/appointmentService';
 import { getUser } from '../../../storage/tokenStorage';
@@ -27,14 +27,11 @@ type AppointmentResponse = Appointment & {
   };
 };
 
-const formatStatus = (status?: string) => {
-  if (!status) {
-    return 'Pending';
-  }
+export type PatientAppointmentFilter = 'scheduled' | 'completed';
 
-  const normalizedStatus = status.toLowerCase();
-  return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
-};
+const ACTIVE_STATUSES = new Set(['PENDING', 'SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS']);
+
+const getStatusKey = (status?: string) => status?.trim().toUpperCase() || '';
 
 const getDoctorName = (appointment: AppointmentResponse) => {
   if (appointment.doctorName) {
@@ -76,6 +73,15 @@ const formatDate = (dateValue?: string) => {
 
 const formatTime = (dateValue?: string, time?: string) => {
   if (time) {
+    const [hours, minutes] = time.split(':').map(Number);
+
+    if (Number.isInteger(hours) && Number.isInteger(minutes)) {
+      return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
+
     return time;
   }
 
@@ -98,6 +104,26 @@ const formatTime = (dateValue?: string, time?: string) => {
 const getAppointmentDate = (appointment: AppointmentResponse) =>
   appointment.date || appointment.appointmentDate || appointment.scheduledAt || appointment.start;
 
+const isFutureAppointment = (appointment: AppointmentResponse) => {
+  const endDate = appointment.endAt ? new Date(appointment.endAt) : null;
+  const startDate = new Date(getAppointmentDate(appointment) || '');
+
+  if (endDate && !Number.isNaN(endDate.getTime())) {
+    return endDate.getTime() > Date.now();
+  }
+
+  if (Number.isNaN(startDate.getTime())) {
+    return false;
+  }
+
+  return startDate.getTime() + 30 * 60 * 1000 > Date.now();
+};
+
+const isVisiblePatientAppointment = (appointment: AppointmentResponse) => {
+  const status = getStatusKey(appointment.status);
+  return status === 'COMPLETED' || (ACTIVE_STATUSES.has(status) && isFutureAppointment(appointment));
+};
+
 const mapAppointment = (appointment: AppointmentResponse): PatientAppointment => ({
   id: appointment.id || appointment._id || getAppointmentDate(appointment) || `${Date.now()}`,
   doctorId: appointment.doctorId || appointment.doctor?.id || appointment.doctor?._id || '',
@@ -106,7 +132,7 @@ const mapAppointment = (appointment: AppointmentResponse): PatientAppointment =>
   specialty: appointment.specialty || appointment.doctor?.specialty || 'Healthcare visit',
   date: formatDate(getAppointmentDate(appointment)),
   time: formatTime(getAppointmentDate(appointment), appointment.time || appointment.startTime),
-  status: formatStatus(appointment.status),
+  status: getStatusKey(appointment.status) === 'COMPLETED' ? 'Completed' : 'Scheduled',
   location: appointment.location,
   type: appointment.type,
   notes: appointment.notes || appointment.reason,
@@ -114,6 +140,7 @@ const mapAppointment = (appointment: AppointmentResponse): PatientAppointment =>
 
 export const usePatientAppointmentsViewModel = () => {
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<PatientAppointmentFilter>('scheduled');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,7 +158,11 @@ export const usePatientAppointmentsViewModel = () => {
       setError(null);
 
       const result = await appointmentService.getPatientAppointments(user.id);
-      setAppointments(result.map(mapAppointment));
+      setAppointments(
+        result
+          .filter(isVisiblePatientAppointment)
+          .map(mapAppointment),
+      );
     } catch {
       setAppointments([]);
       setError('Unable to load appointments.');
@@ -140,8 +171,18 @@ export const usePatientAppointmentsViewModel = () => {
     }
   }, []);
 
+  const filteredAppointments = useMemo(
+    () => appointments.filter(
+      (appointment) => appointment.status.toLowerCase() === selectedFilter,
+    ),
+    [appointments, selectedFilter],
+  );
+
   return {
     appointments,
+    filteredAppointments,
+    selectedFilter,
+    setSelectedFilter,
     isLoading,
     error,
     loadAppointments,

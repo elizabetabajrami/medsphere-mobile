@@ -113,7 +113,10 @@ export const BookAppointmentScreen = ({ navigation, route }: BookAppointmentScre
         <Text style={styles.sectionTitle}>Select Time</Text>
         {viewModel.isLoadingSlots ? <Text style={styles.emptyText}>Loading available times...</Text> : null}
         {!viewModel.isLoadingSlots && viewModel.selectedDate && timeSlots.length === 0 ? (
-          <Text style={styles.emptyText}>No available times for this date.</Text>
+          <View style={styles.emptyState}>
+            <Ionicons name="calendar-outline" size={22} color="#6B941F" />
+            <Text style={styles.emptyText}>{viewModel.emptySlotsMessage}</Text>
+          </View>
         ) : null}
         <View style={styles.timeGrid}>
           {timeSlots.map((slot) => {
@@ -330,7 +333,19 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#66715E',
     fontSize: 14,
+    flex: 1,
+    lineHeight: 20,
+  },
+  emptyState: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#F2F6EC',
+    borderColor: '#DCE8CD',
+    borderRadius: 14,
+    borderWidth: 1,
     marginBottom: 12,
+    padding: 14,
   },
   footer: {
     position: 'absolute',

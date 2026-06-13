@@ -13,8 +13,15 @@ type DateOption = {
 const DEFAULT_SLOT_DURATION_MINUTES = 30;
 const DEFAULT_WORK_START_HOUR = 8;
 const DEFAULT_WORK_END_HOUR = 17;
-const EXPECTED_DAILY_SLOT_COUNT =
-  ((DEFAULT_WORK_END_HOUR - DEFAULT_WORK_START_HOUR) * 60) / DEFAULT_SLOT_DURATION_MINUTES;
+const SLOT_REFRESH_INTERVAL_MS = 15_000;
+
+const isWeekendDate = (dateValue: string) => {
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const dayOfWeek = date.getDay();
+
+  return dayOfWeek === 0 || dayOfWeek === 6;
+};
 
 const formatDateForApi = (date: Date) => {
   const year = date.getFullYear();
@@ -110,6 +117,10 @@ const getLocalTimePart = (value?: string) => {
 };
 
 export const getSlotStartDateTime = (slot: AvailableSlot, selectedDate: string) => {
+  if (slot.start) {
+    return slot.start;
+  }
+
   const startTime = slot.startTime || slot.time;
   const localDateTimeIso = createLocalDateTimeIso(selectedDate, startTime);
 
@@ -117,7 +128,7 @@ export const getSlotStartDateTime = (slot: AvailableSlot, selectedDate: string) 
     return localDateTimeIso;
   }
 
-  return slot.start || '';
+  return '';
 };
 
 export const getSlotDisplayTime = (slot: AvailableSlot) =>
@@ -180,20 +191,19 @@ const createBookableSlots = (
   selectedDate: string,
   appointmentId?: string,
 ) => {
-  const availableTimes = new Set(
+  const availableSlotsByTime = new Map(
     availableSlots
-      .map(getSlotDisplayTime)
-      .filter(Boolean),
+      .map((slot) => [getSlotDisplayTime(slot), slot] as const)
+      .filter(([time]) => Boolean(time)),
   );
-  const hasCompleteAvailabilitySignal = availableTimes.size > 0
-    && availableTimes.size < EXPECTED_DAILY_SLOT_COUNT;
-
-  const occupiedTimes = occupiedSlots
-    .map(getSlotDisplayTime)
-    .filter(Boolean);
+  const occupiedSlotsByTime = new Map(
+    occupiedSlots
+      .map((slot) => [getSlotDisplayTime(slot), slot] as const)
+      .filter(([time]) => Boolean(time)),
+  );
 
   const bookedTimes = new Set([
-    ...occupiedTimes,
+    ...occupiedSlotsByTime.keys(),
     ...appointments
       .filter((appointment) => isBlockingAppointment(appointment, appointmentId))
       .filter((appointment) => getDatePart(getAppointmentDateTime(appointment)) === selectedDate)
@@ -201,17 +211,23 @@ const createBookableSlots = (
       .filter(Boolean),
   ]);
 
-  return createDailySlots(selectedDate, DEFAULT_SLOT_DURATION_MINUTES).map((slot) => {
-    const slotTime = getSlotDisplayTime(slot);
-    const isBooked = bookedTimes.has(slotTime);
-    const isUnavailableFromAvailability =
-      hasCompleteAvailabilitySignal && !availableTimes.has(slotTime);
+  return createDailySlots(selectedDate, DEFAULT_SLOT_DURATION_MINUTES)
+    .filter((slot) => {
+      const slotTime = getSlotDisplayTime(slot);
+      return availableSlotsByTime.has(slotTime) || bookedTimes.has(slotTime);
+    })
+    .map((slot) => {
+      const slotTime = getSlotDisplayTime(slot);
+      const isBooked = bookedTimes.has(slotTime);
+      const serverSlot = availableSlotsByTime.get(slotTime)
+        ?? occupiedSlotsByTime.get(slotTime);
 
-    return {
-      ...slot,
-      isAvailable: !isBooked && !isUnavailableFromAvailability,
-    };
-  });
+      return {
+        ...slot,
+        ...serverSlot,
+        isAvailable: availableSlotsByTime.has(slotTime) && !isBooked,
+      };
+    });
 };
 
 const filterSlotsForSelectedDate = (
@@ -293,6 +309,7 @@ export const useBookAppointmentViewModel = (
   const [selectedTime, setSelectedTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [unavailableSlotMessage, setUnavailableSlotMessage] = useState<string | null>(null);
 
@@ -300,42 +317,91 @@ export const useBookAppointmentViewModel = (
   const mode = options?.mode || 'book';
   const appointmentId = options?.appointmentId;
   const staffProfileId = options?.staffProfileId || doctorId;
+  const selectedDateIsWeekend = isWeekendDate(selectedDate);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      setSlotsRefreshKey((current) => current + 1);
+    }, SLOT_REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setSelectedTime('');
+    setUnavailableSlotMessage(null);
+  }, [doctorId, selectedDate]);
+
+  useEffect(() => {
+    let isCurrentRequest = true;
+
     const loadAvailableSlots = async () => {
       if (!doctorId || !selectedDate) {
-        setTimeSlots([]);
-        setSelectedTime('');
+        if (isCurrentRequest) {
+          setTimeSlots([]);
+          setSelectedTime('');
+        }
+        return;
+      }
+
+      if (isWeekendDate(selectedDate)) {
+        if (isCurrentRequest) {
+          setTimeSlots([]);
+          setError(null);
+          setIsLoadingSlots(false);
+        }
         return;
       }
 
       try {
-        setIsLoadingSlots(true);
-        setError(null);
-        setSelectedTime('');
+        if (isCurrentRequest) {
+          setIsLoadingSlots(true);
+          setError(null);
+        }
 
         const [slotAvailability, doctorAppointments] = await Promise.all([
           appointmentService.getAvailableSlots(doctorId, selectedDate),
           appointmentService.getDoctorAppointments(doctorId).catch(() => []),
         ]);
 
-        setTimeSlots(filterSlotsForSelectedDate(
-          slotAvailability.availableSlots,
-          slotAvailability.occupiedSlots,
-          doctorAppointments,
-          selectedDate,
-          appointmentId,
-        ));
+        if (isCurrentRequest) {
+          const nextTimeSlots = filterSlotsForSelectedDate(
+            slotAvailability.availableSlots,
+            slotAvailability.occupiedSlots,
+            doctorAppointments,
+            selectedDate,
+            appointmentId,
+          );
+
+          setTimeSlots(nextTimeSlots);
+          setSelectedTime((current) => {
+            const remainsAvailable = nextTimeSlots.some(
+              (slot) =>
+                slot.isAvailable &&
+                getSlotStartDateTime(slot, selectedDate) === current,
+            );
+
+            return current && !remainsAvailable ? '' : current;
+          });
+        }
       } catch (err) {
-        setTimeSlots([]);
-        setError(getBookingErrorMessage(err));
+        if (isCurrentRequest) {
+          setTimeSlots([]);
+          setError(getBookingErrorMessage(err));
+        }
       } finally {
-        setIsLoadingSlots(false);
+        if (isCurrentRequest) {
+          setIsLoadingSlots(false);
+        }
       }
     };
 
     loadAvailableSlots();
-  }, [appointmentId, doctorId, selectedDate]);
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [appointmentId, doctorId, selectedDate, slotsRefreshKey]);
 
   const confirmBooking = async () => {
     if (!canConfirm || isLoading) {
@@ -365,6 +431,12 @@ export const useBookAppointmentViewModel = (
       return true;
     } catch (err) {
       setError(getBookingErrorMessage(err, mode));
+
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setSelectedTime('');
+        setSlotsRefreshKey((current) => current + 1);
+      }
+
       return false;
     } finally {
       setIsLoading(false);
@@ -394,6 +466,9 @@ export const useBookAppointmentViewModel = (
     isLoading,
     isLoadingSlots,
     error,
+    emptySlotsMessage: selectedDateIsWeekend
+      ? 'The doctor does not work on weekends. Please select a weekday.'
+      : 'No available times for this date.',
     unavailableSlotMessage,
     clearUnavailableSlotMessage: () => setUnavailableSlotMessage(null),
     confirmBooking,

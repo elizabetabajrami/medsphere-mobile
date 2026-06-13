@@ -13,6 +13,20 @@ type DoctorProfileResponse = {
   role?: string;
 };
 
+export type StaffProfileResponse = {
+  id: string;
+  userId: string;
+  specialization?: string;
+  departments?: {
+    isPrimary?: boolean;
+    department?: {
+      id: string;
+      name: string;
+      isActive?: boolean;
+    };
+  }[];
+};
+
 export const doctorService = {
   async getDoctor(doctorId: string): Promise<Doctor> {
     const response = await apiClient.get<Doctor>(endpoints.doctors.byId(doctorId));
@@ -21,6 +35,18 @@ export const doctorService = {
 
   async getMyProfile(): Promise<DoctorProfileResponse> {
     const response = await apiClient.get<DoctorProfileResponse>(endpoints.patients.me);
+    return response.data;
+  },
+
+  async getMyStaffProfile(): Promise<StaffProfileResponse> {
+    const response = await coreApiClient.get<StaffProfileResponse>(endpoints.doctors.me, {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+      params: {
+        refresh: Date.now(),
+      },
+    });
     return response.data;
   },
 
