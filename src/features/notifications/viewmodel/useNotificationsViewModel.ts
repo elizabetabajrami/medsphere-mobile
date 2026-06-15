@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { NotificationItem } from '../model/Notification';
 import { notificationService } from '../service/notificationService';
+import { getVisibleNotifications, getVisibleUnreadCount } from '../utils/notificationFilters';
 
 export const useNotificationsViewModel = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -21,8 +22,9 @@ export const useNotificationsViewModel = () => {
       }
 
       const result = await notificationService.getNotifications({ limit: 50 });
-      setNotifications(result.data);
-      setUnreadCount(result.meta.unreadCount);
+      const visibleNotifications = getVisibleNotifications(result.data);
+      setNotifications(visibleNotifications);
+      setUnreadCount(getVisibleUnreadCount(visibleNotifications));
     } catch {
       setError('Unable to load notifications.');
     } finally {

@@ -3,6 +3,7 @@ import type { Appointment, PatientAppointment } from '../../appointments/model/A
 import { appointmentService } from '../../appointments/service/appointmentService';
 import { chatService } from '../../chat/service/chatService';
 import { notificationService } from '../../notifications/service/notificationService';
+import { getVisibleUnreadCount } from '../../notifications/utils/notificationFilters';
 import { getUser } from '../../../storage/tokenStorage';
 
 type AppointmentResponse = Appointment & {
@@ -189,7 +190,7 @@ export const usePatientHomeViewModel = () => {
 
     const [roomsResult, notificationsResult] = await Promise.allSettled([
       chatService.getRooms(),
-      notificationService.getNotifications({ limit: 1 }),
+      notificationService.getNotifications({ limit: 50 }),
     ]);
 
     if (roomsResult.status === 'fulfilled') {
@@ -201,7 +202,7 @@ export const usePatientHomeViewModel = () => {
     }
 
     if (notificationsResult.status === 'fulfilled') {
-      setUnreadNotifications(notificationsResult.value.meta.unreadCount);
+      setUnreadNotifications(getVisibleUnreadCount(notificationsResult.value.data));
     } else {
       setUnreadNotifications(0);
     }

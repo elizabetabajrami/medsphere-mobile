@@ -4,6 +4,7 @@ import type { Appointment } from '../../appointments/model/Appointment';
 import { appointmentService } from '../../appointments/service/appointmentService';
 import { chatService } from '../../chat/service/chatService';
 import { notificationService } from '../../notifications/service/notificationService';
+import { getVisibleUnreadCount } from '../../notifications/utils/notificationFilters';
 import { doctorService } from '../service/doctorService';
 import { isTodayAppointment } from '../utils/appointmentFormatters';
 
@@ -51,7 +52,7 @@ export const useDoctorHomeViewModel = () => {
 
       const [roomsResult, notificationsResult] = await Promise.allSettled([
         chatService.getRooms(),
-        notificationService.getNotifications({ limit: 1 }),
+        notificationService.getNotifications({ limit: 50 }),
       ]);
 
       if (roomsResult.status === 'fulfilled') {
@@ -63,7 +64,7 @@ export const useDoctorHomeViewModel = () => {
       }
 
       if (notificationsResult.status === 'fulfilled') {
-        setUnreadNotifications(notificationsResult.value.meta.unreadCount);
+        setUnreadNotifications(getVisibleUnreadCount(notificationsResult.value.data));
       } else {
         setUnreadNotifications(0);
       }

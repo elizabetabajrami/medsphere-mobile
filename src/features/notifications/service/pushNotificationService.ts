@@ -3,16 +3,26 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { notificationService } from './notificationService';
+import { isAppointmentBookedNotification } from '../utils/notificationFilters';
 
 let currentPushToken: string | null = null;
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    const content = notification.request.content;
+    const shouldHideAppointmentBooked = isAppointmentBookedNotification({
+      title: content.title,
+      body: content.body,
+      data: content.data as Record<string, unknown>,
+    });
+
+    return {
+      shouldShowBanner: !shouldHideAppointmentBooked,
+      shouldShowList: !shouldHideAppointmentBooked,
+      shouldPlaySound: !shouldHideAppointmentBooked,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 export const pushNotificationService = {

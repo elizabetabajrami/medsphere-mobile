@@ -3,6 +3,7 @@ import { io, type Socket } from 'socket.io-client';
 import { notificationSocketUrl } from '../../../network/apiClient';
 import { getToken, getUser } from '../../../storage/tokenStorage';
 import type { ChatMessage } from '../model/Chat';
+import { chatNotificationService } from '../service/chatNotificationService';
 import { chatService } from '../service/chatService';
 
 export const useChatBadgeViewModel = () => {
@@ -46,6 +47,9 @@ export const useChatBadgeViewModel = () => {
       socket.on('chat:message', (message: ChatMessage) => {
         if (message.senderId === user?.id) return;
         setUnreadCount((current) => current + 1);
+        chatNotificationService.showIncomingMessage(message).catch((error) => {
+          console.log('CHAT NOTIFICATION ERROR:', error);
+        });
       });
 
       socket.on('chat:read', loadUnreadCount);

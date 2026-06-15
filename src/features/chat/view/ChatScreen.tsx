@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,8 +27,25 @@ type ChatScreenProps = {
 
 export const ChatScreen = ({ role }: ChatScreenProps) => {
   const viewModel = useChatViewModel({ role });
+  const messagesListRef = useRef<FlatList<ChatMessage>>(null);
   const [draft, setDraft] = useState('');
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
+  const scrollToLatestMessage = useCallback((animated = true) => {
+    if (viewModel.messages.length === 0) return;
+
+    requestAnimationFrame(() => {
+      messagesListRef.current?.scrollToEnd({ animated });
+    });
+  }, [viewModel.messages.length]);
+
+  useEffect(() => {
+    scrollToLatestMessage(false);
+  }, [scrollToLatestMessage, viewModel.activeRoomId, viewModel.isMessagesLoading]);
+
+  useEffect(() => {
+    scrollToLatestMessage();
+  }, [scrollToLatestMessage, viewModel.messages.length]);
 
   const send = () => {
     const value = draft.trim();
@@ -132,10 +149,12 @@ export const ChatScreen = ({ role }: ChatScreenProps) => {
               <ActivityIndicator color="#6B941F" style={styles.loader} />
             ) : (
               <FlatList
+                ref={messagesListRef}
                 data={viewModel.messages}
                 keyExtractor={(message) => message.id}
                 contentContainerStyle={styles.messagesList}
                 showsVerticalScrollIndicator={false}
+                onContentSizeChange={() => scrollToLatestMessage(false)}
                 ListEmptyComponent={
                   <View style={styles.emptyThread}>
                     <Ionicons name="chatbubble-ellipses-outline" size={34} color="#6B941F" />
