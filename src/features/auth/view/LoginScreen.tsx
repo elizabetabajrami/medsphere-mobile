@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -24,6 +24,7 @@ type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'> & {
 
 export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) => {
   const viewModel = useLoginViewModel();
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!viewModel.pendingVerificationEmail) {
@@ -103,10 +104,22 @@ export const LoginScreen = ({ navigation, onAuthenticated }: LoginScreenProps) =
                   onChangeText={viewModel.setPassword}
                   placeholder="Enter your password"
                   placeholderTextColor="#A7B09E"
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   style={styles.input}
                   value={viewModel.password}
                 />
+                <Pressable
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                  accessibilityRole="button"
+                  onPress={() => setShowPassword((current) => !current)}
+                  style={styles.passwordToggle}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={21}
+                    color="#6B755F"
+                  />
+                </Pressable>
               </View>
             </View>
 
@@ -229,6 +242,13 @@ const styles = StyleSheet.create({
     color: '#1F271A',
     fontSize: 16,
     paddingVertical: Platform.OS === 'ios' ? 15 : 11,
+  },
+  passwordToggle: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: -10,
   },
   forgotButton: {
     alignSelf: 'flex-end',
