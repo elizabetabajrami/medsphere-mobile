@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { io, type Socket } from 'socket.io-client';
+import { notificationSocketUrl } from '../../../network/apiClient';
+import { getToken } from '../../../storage/tokenStorage';
 import type { NotificationItem } from '../model/Notification';
 import { notificationService } from '../service/notificationService';
 import { getVisibleNotifications, getVisibleUnreadCount } from '../utils/notificationFilters';
@@ -35,6 +38,54 @@ export const useNotificationsViewModel = () => {
 
   useEffect(() => {
     loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    let mounted = true;
+    let socket: Socket | null = null;
+
+    getToken().then((token) => {
+      if (!mounted || !token) return;
+
+      socket = io(notificationSocketUrl, { auth: { token } });
+
+      socket.on('notification:new', (notification: NotificationItem) => {
+        const visible = getVisibleNotifications([notification]);
+
+        if (visible.length === 0) {
+          return;
+        }
+
+        setNotifications((current) => {
+          if (current.some((item) => item.id === notification.id)) {
+            return current;
+          }
+
+          return [notification, ...current];
+        });
+
+        if (!notification.isRead) {
+          setUnreadCount((current) => current + 1);
+        }
+      });
+
+      socket.on('notification:read', (notification: NotificationItem) => {
+        setNotifications((current) =>
+          current.map((item) => (item.id === notification.id ? notification : item)),
+        );
+        loadNotifications(true);
+      });
+
+      socket.on('notification:all-read', () => {
+        setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
+        setUnreadCount(0);
+      });
+    });
+
+    return () => {
+      mounted = false;
+      socket?.disconnect();
+    };
   }, [loadNotifications]);
 
   const markRead = useCallback(async (notificationId: string) => {
