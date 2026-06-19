@@ -1,5 +1,5 @@
-import { apiClient } from "../../../network/apiClient";
-import { endpoints } from "../../../network/endpoints";
+import { apiClient } from "../network/apiClient";
+import { endpoints } from "../network/endpoints";
 import type {
   AuthResponse,
   LoginCredentials,
@@ -8,8 +8,8 @@ import type {
   ResendVerificationPayload,
   ResetPasswordPayload,
   VerifyEmailPayload,
-} from "../model/AuthTypes";
-import type { User } from "../model/User";
+} from "../features/auth/model/AuthTypes";
+import type { User } from "../features/auth/model/User";
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {

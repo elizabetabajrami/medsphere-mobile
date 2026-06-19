@@ -16,7 +16,7 @@ import type { AuthStackParamList } from '../../../navigation/types';
 import { AppFeedbackModal } from '../../../shared/components/AppFeedbackModal';
 import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
-import { authService } from '../service/authService';
+import { authService } from '../../../services/authService';
 
 type ResetPasswordScreenProps = NativeStackScreenProps<AuthStackParamList, 'ResetPassword'>;
 

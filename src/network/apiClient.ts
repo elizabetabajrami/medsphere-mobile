@@ -12,9 +12,9 @@ declare module "axios" {
   }
 }
 
-const AUTH_BASE_URL = "http://192.168.1.8:3005";
-const CORE_BASE_URL = "http://192.168.1.8:3007";
-const NOTIFICATION_BASE_URL = "http://192.168.1.8:3008";
+const AUTH_BASE_URL = "http://192.168.178.143:3005";
+const CORE_BASE_URL = "http://192.168.178.143:3007";
+const NOTIFICATION_BASE_URL = "http://192.168.178.143:3008";
 
 export const notificationSocketUrl = NOTIFICATION_BASE_URL;
 

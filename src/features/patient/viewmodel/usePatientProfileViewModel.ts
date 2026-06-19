@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { clearSession, getUser, saveUser } from '../../../storage/tokenStorage';
+import {
+  clearSession,
+  getCurrentPatientAvatarUrl,
+  getPatientAvatarUrl,
+  getUser,
+  saveCurrentPatientAvatarUrl,
+  savePatientAvatarUrl,
+  saveUser,
+} from '../../../storage/tokenStorage';
 import type { PatientProfile } from '../model/Patient';
-import { patientService } from '../service/patientService';
-import { pushNotificationService } from '../../notifications/service/pushNotificationService';
+import { patientService } from '../../../services/patientService';
+import { pushNotificationService } from '../../../services/pushNotificationService';
+import { apiClient } from '../../../network/apiClient';
 
 const defaultProfile: PatientProfile = {
   name: 'Patient',
@@ -15,6 +24,38 @@ type ProfileUpdates = {
   phone: string;
   avatarUrl?: string;
 };
+
+const localAvatarSchemes = ['file:', 'content:', 'data:', 'asset-library:', 'ph:'];
+
+const isLocalAvatarUrl = (avatarUrl?: string) =>
+  !!avatarUrl && localAvatarSchemes.some((scheme) => avatarUrl.startsWith(scheme));
+
+const normalizeAvatarUrl = (avatarUrl?: string) => {
+  const trimmedAvatarUrl = avatarUrl?.trim();
+
+  if (!trimmedAvatarUrl) {
+    return undefined;
+  }
+
+  if (
+    trimmedAvatarUrl.startsWith('http://') ||
+    trimmedAvatarUrl.startsWith('https://') ||
+    localAvatarSchemes.some((scheme) => trimmedAvatarUrl.startsWith(scheme))
+  ) {
+    return trimmedAvatarUrl;
+  }
+
+  const baseUrl = apiClient.defaults.baseURL;
+
+  if (!baseUrl) {
+    return trimmedAvatarUrl;
+  }
+
+  return `${baseUrl.replace(/\/$/, '')}/${trimmedAvatarUrl.replace(/^\//, '')}`;
+};
+
+const getAvatarUrl = (remoteAvatarUrl?: string, fallbackAvatarUrl?: string) =>
+  normalizeAvatarUrl(remoteAvatarUrl) || normalizeAvatarUrl(fallbackAvatarUrl);
 
 export const usePatientProfileViewModel = () => {
   const [profile, setProfile] = useState<PatientProfile>(defaultProfile);
@@ -29,15 +70,25 @@ export const usePatientProfileViewModel = () => {
       const fullName = [user.firstName?.trim(), user.lastName?.trim()]
         .filter(Boolean)
         .join(' ');
+      const storedUser = await getUser();
+      const storedAvatarUrl = await getPatientAvatarUrl(user.id);
+      const currentAvatarUrl = await getCurrentPatientAvatarUrl();
+      const avatarUrl = getAvatarUrl(
+        storedAvatarUrl || currentAvatarUrl || storedUser?.avatarUrl,
+        user.avatarUrl,
+      );
+
+      if (avatarUrl) {
+        await savePatientAvatarUrl(user.id, avatarUrl);
+        await saveCurrentPatientAvatarUrl(avatarUrl);
+      }
 
       setProfile({
         name: fullName || user.name || 'Patient',
         email: user.email,
         phone: user.phone || 'Not provided',
-        avatarUrl: user.avatarUrl,
+        avatarUrl,
       });
-
-      const storedUser = await getUser();
 
       if (storedUser) {
         await saveUser({
@@ -49,7 +100,7 @@ export const usePatientProfileViewModel = () => {
           phone: user.phone,
           dateOfBirth: user.dateOfBirth,
           gender: user.gender,
-          avatarUrl: user.avatarUrl,
+          avatarUrl,
         });
       }
     } catch {
@@ -62,12 +113,15 @@ export const usePatientProfileViewModel = () => {
       const fullName = [user.firstName?.trim(), user.lastName?.trim()]
         .filter(Boolean)
         .join(' ');
+      const storedAvatarUrl = await getPatientAvatarUrl(user.id);
+      const currentAvatarUrl = await getCurrentPatientAvatarUrl();
+      const avatarUrl = getAvatarUrl(storedAvatarUrl || currentAvatarUrl || user.avatarUrl);
 
       setProfile({
         name: fullName || user.name || 'Patient',
         email: user.email,
         phone: user.phone || 'Not provided',
-        avatarUrl: user.avatarUrl,
+        avatarUrl,
       });
     }
   }, []);
@@ -91,16 +145,24 @@ export const usePatientProfileViewModel = () => {
     try {
       setError(null);
       setIsSaving(true);
+      const nextAvatarUrl = getAvatarUrl(updates.avatarUrl, user.avatarUrl);
+      const apiAvatarUrl = isLocalAvatarUrl(nextAvatarUrl) ? undefined : nextAvatarUrl;
 
       const updatedProfile = await patientService.updateMyProfile({
         firstName,
         lastName,
         phone: phone || undefined,
-        avatarUrl: updates.avatarUrl,
+        avatarUrl: apiAvatarUrl,
       });
       const updatedName = [updatedProfile.firstName?.trim(), updatedProfile.lastName?.trim()]
         .filter(Boolean)
         .join(' ') || updatedProfile.name || name;
+      const avatarUrl = getAvatarUrl(nextAvatarUrl, updatedProfile.avatarUrl || user.avatarUrl);
+
+      if (avatarUrl) {
+        await savePatientAvatarUrl(user.id, avatarUrl);
+        await saveCurrentPatientAvatarUrl(avatarUrl);
+      }
 
       await saveUser({
         ...user,
@@ -111,14 +173,14 @@ export const usePatientProfileViewModel = () => {
         phone: updatedProfile.phone,
         dateOfBirth: updatedProfile.dateOfBirth,
         gender: updatedProfile.gender,
-        avatarUrl: updatedProfile.avatarUrl,
+        avatarUrl,
       });
 
       setProfile({
         name: updatedName,
         email: updatedProfile.email || user.email,
         phone: updatedProfile.phone || 'Not provided',
-        avatarUrl: updatedProfile.avatarUrl,
+        avatarUrl,
       });
 
       return true;

@@ -3,8 +3,8 @@ import { io, type Socket } from 'socket.io-client';
 import { notificationSocketUrl } from '../../../network/apiClient';
 import { getToken, getUser } from '../../../storage/tokenStorage';
 import type { ChatMessage } from '../model/Chat';
-import { chatNotificationService } from '../service/chatNotificationService';
-import { chatService } from '../service/chatService';
+import { chatNotificationService } from '../../../services/chatNotificationService';
+import { chatService } from '../../../services/chatService';
 
 export const useChatBadgeViewModel = () => {
   const [unreadCount, setUnreadCount] = useState(0);

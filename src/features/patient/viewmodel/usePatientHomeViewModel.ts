@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import type { Appointment, PatientAppointment } from '../../appointments/model/Appointment';
-import { appointmentService } from '../../appointments/service/appointmentService';
-import { chatService } from '../../chat/service/chatService';
-import { notificationService } from '../../notifications/service/notificationService';
+import { appointmentService } from '../../../services/appointmentService';
+import { chatService } from '../../../services/chatService';
+import { notificationService } from '../../../services/notificationService';
 import { getVisibleUnreadCount } from '../../notifications/utils/notificationFilters';
 import { getUser } from '../../../storage/tokenStorage';
 

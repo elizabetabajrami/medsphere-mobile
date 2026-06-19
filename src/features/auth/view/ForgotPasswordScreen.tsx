@@ -15,7 +15,7 @@ import {
 import type { AuthStackParamList } from '../../../navigation/types';
 import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
-import { authService } from '../service/authService';
+import { authService } from '../../../services/authService';
 
 type ForgotPasswordScreenProps = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 

@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios';
-import { notificationApiClient } from '../../../network/apiClient';
-import { endpoints } from '../../../network/endpoints';
-import type { NotificationItem, NotificationsResponse } from '../model/Notification';
+import { notificationApiClient } from '../network/apiClient';
+import { endpoints } from '../network/endpoints';
+import type { NotificationItem, NotificationsResponse } from '../features/notifications/model/Notification';
 
 type ListNotificationsParams = {
   page?: number;

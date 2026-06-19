@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Appointment, AppointmentStatus } from '../../appointments/model/Appointment';
-import { appointmentService } from '../../appointments/service/appointmentService';
+import { appointmentService } from '../../../services/appointmentService';
 import { getStatusKey, isTodayAppointment, isUpcomingAppointment } from '../utils/appointmentFormatters';
 
 export type DoctorAppointmentFilter = 'today' | 'upcoming' | 'completed' | 'cancelled' | 'no-show';

@@ -1,7 +1,7 @@
-import { apiClient, coreApiClient } from '../../../network/apiClient';
-import { endpoints } from '../../../network/endpoints';
-import type { Appointment } from '../../appointments/model/Appointment';
-import type { Doctor } from '../model/Doctor';
+import { apiClient, coreApiClient } from '../network/apiClient';
+import { endpoints } from '../network/endpoints';
+import type { Appointment } from '../features/appointments/model/Appointment';
+import type { Doctor } from '../features/doctor/model/Doctor';
 
 type DoctorProfileResponse = {
   id: string;

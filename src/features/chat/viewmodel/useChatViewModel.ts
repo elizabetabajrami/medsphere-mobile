@@ -4,7 +4,7 @@ import { notificationSocketUrl } from '../../../network/apiClient';
 import { getToken, getUser } from '../../../storage/tokenStorage';
 import type { UserRole } from '../../auth/model/AuthTypes';
 import type { ChatContact, ChatImageUpload, ChatMessage, ChatRoom } from '../model/Chat';
-import { chatService } from '../service/chatService';
+import { chatService } from '../../../services/chatService';
 
 type UseChatViewModelParams = {
   role: UserRole;

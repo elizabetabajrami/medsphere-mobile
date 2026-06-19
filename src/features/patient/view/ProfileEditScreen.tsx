@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Paths } from 'expo-file-system';
+import { copyAsync } from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import {
@@ -21,17 +23,40 @@ import { usePatientProfileViewModel } from '../viewmodel/usePatientProfileViewMo
 
 type ProfileEditScreenProps = NativeStackScreenProps<PatientStackParamList, 'ProfileEdit'>;
 
+const persistProfileAvatar = async (uri: string) => {
+  const documentDirectory = Paths.document.uri;
+
+  if (uri.startsWith(documentDirectory)) {
+    return uri;
+  }
+
+  const extensionMatch = uri.match(/\.(jpe?g|png|webp|heic)(?:\?.*)?$/i);
+  const extension = extensionMatch?.[1]?.toLowerCase() || 'jpg';
+  const destination = `${documentDirectory}/profile-avatar-${Date.now()}.${extension}`;
+
+  await copyAsync({ from: uri, to: destination });
+  return destination;
+};
+
 export const ProfileEditScreen = ({ navigation }: ProfileEditScreenProps) => {
   const { error, isSaving, profile, saveProfile } = usePatientProfileViewModel();
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone === 'Not provided' ? '' : profile.phone);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const [hasPickedAvatar, setHasPickedAvatar] = useState(false);
 
   useEffect(() => {
     setName(profile.name);
     setPhone(profile.phone === 'Not provided' ? '' : profile.phone);
-    setAvatarUrl(profile.avatarUrl);
-  }, [profile]);
+    if (!hasPickedAvatar) {
+      setAvatarUrl(profile.avatarUrl);
+    }
+  }, [hasPickedAvatar, profile]);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [avatarUrl]);
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -58,7 +83,11 @@ export const ProfileEditScreen = ({ navigation }: ProfileEditScreenProps) => {
     });
 
     if (!result.canceled) {
-      setAvatarUrl(result.assets[0].uri);
+      const persistedAvatarUrl = await persistProfileAvatar(result.assets[0].uri);
+
+      setAvatarUrl(persistedAvatarUrl);
+      setAvatarLoadFailed(false);
+      setHasPickedAvatar(true);
     }
   };
 
@@ -94,8 +123,14 @@ export const ProfileEditScreen = ({ navigation }: ProfileEditScreenProps) => {
         <View style={styles.card}>
           <View style={styles.avatarSection}>
             <View style={styles.avatar}>
-              {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+              {avatarUrl && !avatarLoadFailed ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatarImage}
+                  onError={() => {
+                    setAvatarLoadFailed(true);
+                  }}
+                />
               ) : (
                 <Ionicons name="person-outline" size={42} color="#6B941F" />
               )}

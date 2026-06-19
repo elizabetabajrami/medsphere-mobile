@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { appointmentService } from '../service/appointmentService';
+import { appointmentService } from '../../../services/appointmentService';
 import type { Appointment, AvailableSlot } from '../model/Appointment';
 
 type DateOption = {

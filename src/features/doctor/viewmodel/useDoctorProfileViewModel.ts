@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { clearSession, getUser, saveUser } from '../../../storage/tokenStorage';
-import { doctorService } from '../service/doctorService';
-import { pushNotificationService } from '../../notifications/service/pushNotificationService';
+import { doctorService } from '../../../services/doctorService';
+import { pushNotificationService } from '../../../services/pushNotificationService';
 
 type DoctorProfile = {
   name: string;

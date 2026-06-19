@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import type { ChatMessage } from '../model/Chat';
+import type { ChatMessage } from '../features/chat/model/Chat';
 
 const MAX_PREVIEW_LENGTH = 90;
 

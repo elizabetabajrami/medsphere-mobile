@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { getUser } from '../../../storage/tokenStorage';
 import type { Appointment } from '../../appointments/model/Appointment';
-import { appointmentService } from '../../appointments/service/appointmentService';
-import { chatService } from '../../chat/service/chatService';
-import { notificationService } from '../../notifications/service/notificationService';
+import { appointmentService } from '../../../services/appointmentService';
+import { chatService } from '../../../services/chatService';
+import { notificationService } from '../../../services/notificationService';
 import { getVisibleUnreadCount } from '../../notifications/utils/notificationFilters';
-import { doctorService } from '../service/doctorService';
+import { doctorService } from '../../../services/doctorService';
 import { isTodayAppointment } from '../utils/appointmentFormatters';
 
 const getDisplayName = (user?: {

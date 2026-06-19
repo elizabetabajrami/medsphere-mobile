@@ -7,7 +7,7 @@ import { AppHeader } from '../../../shared/components/AppHeader';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import { LoadingView } from '../../../shared/components/LoadingView';
 import type { NotificationItem } from '../model/Notification';
-import { notificationService } from '../service/notificationService';
+import { notificationService } from '../../../services/notificationService';
 import { useNotificationsViewModel } from '../viewmodel/useNotificationsViewModel';
 
 type NotificationsScreenProps = {

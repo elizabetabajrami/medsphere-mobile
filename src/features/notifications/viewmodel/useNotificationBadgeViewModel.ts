@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { io, type Socket } from 'socket.io-client';
 import { notificationSocketUrl } from '../../../network/apiClient';
+import { notificationService } from '../../../services/notificationService';
 import { getToken } from '../../../storage/tokenStorage';
 import type { NotificationItem } from '../model/Notification';
-import { notificationService } from '../service/notificationService';
 import { getVisibleNotifications, getVisibleUnreadCount } from '../utils/notificationFilters';
 
 export const useNotificationBadgeViewModel = () => {

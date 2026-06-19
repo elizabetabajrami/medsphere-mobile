@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { PatientAppointment } from '../model/Appointment';
-import { appointmentService } from '../service/appointmentService';
+import { appointmentService } from '../../../services/appointmentService';
 
 export const useAppointmentDetailsViewModel = (appointment: PatientAppointment) => {
   const [isCancelling, setIsCancelling] = useState(false);

@@ -1,6 +1,6 @@
-import { coreApiClient, notificationApiClient } from '../../../network/apiClient';
-import { endpoints } from '../../../network/endpoints';
-import { patientService } from '../../patient/service/patientService';
+import { coreApiClient, notificationApiClient } from '../network/apiClient';
+import { endpoints } from '../network/endpoints';
+import { patientService } from './patientService';
 import type {
   ChatContact,
   ChatImageUpload,
@@ -8,7 +8,7 @@ import type {
   ChatMessagesResponse,
   ChatRoomsResponse,
   ChatRoom,
-} from '../model/Chat';
+} from '../features/chat/model/Chat';
 
 type Envelope<T> = {
   data?: T;

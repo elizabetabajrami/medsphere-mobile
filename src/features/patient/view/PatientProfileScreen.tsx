@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { PatientStackParamList } from '../../../navigation/types';
+import { getCurrentPatientAvatarUrl } from '../../../storage/tokenStorage';
 import { usePatientProfileViewModel } from '../viewmodel/usePatientProfileViewModel';
 
 type PatientProfileScreenProps = {
@@ -15,10 +16,20 @@ export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) =>
   const navigation = useNavigation<NativeStackNavigationProp<PatientStackParamList>>();
   const viewModel = usePatientProfileViewModel();
   const { loadProfile, profile } = viewModel;
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | undefined>();
+  const avatarUrl = localAvatarUrl || profile.avatarUrl;
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [avatarUrl]);
 
   useFocusEffect(
     useCallback(() => {
       loadProfile();
+      getCurrentPatientAvatarUrl().then((storedAvatarUrl) => {
+        setLocalAvatarUrl(storedAvatarUrl || undefined);
+      });
     }, [loadProfile]),
   );
 
@@ -43,8 +54,14 @@ export const PatientProfileScreen = ({ onLogout }: PatientProfileScreenProps) =>
         <View style={styles.card}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatar}>
-              {profile.avatarUrl ? (
-                <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+              {avatarUrl && !avatarLoadFailed ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatarImage}
+                  onError={() => {
+                    setAvatarLoadFailed(true);
+                  }}
+                />
               ) : (
                 <Ionicons name="person-outline" size={42} color="#6B941F" />
               )}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PatientDoctor } from '../model/Patient';
-import { patientService } from '../service/patientService';
+import { patientService } from '../../../services/patientService';
 
 export const usePatientDoctorsViewModel = () => {
   const [doctors, setDoctors] = useState<PatientDoctor[]>([]);

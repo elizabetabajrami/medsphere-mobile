@@ -7,7 +7,7 @@ import {
   saveUser,
 } from "../../../storage/tokenStorage";
 import type { UserRole } from "../model/AuthTypes";
-import { authService } from "../service/authService";
+import { authService } from "../../../services/authService";
 
 const getLoginErrorMessage = (err: any) => {
   const status = err.response?.status;

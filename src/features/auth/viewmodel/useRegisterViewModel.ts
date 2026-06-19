@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { savePendingPersonalNumber } from "../../../storage/tokenStorage";
-import { authService } from "../service/authService";
+import { authService } from "../../../services/authService";
 
 const getRegisterErrorMessage = (err: any) => {
   const status = err.response?.status;

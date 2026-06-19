@@ -1,5 +1,5 @@
-import { coreApiClient } from '../../../network/apiClient';
-import { endpoints } from '../../../network/endpoints';
+import { coreApiClient } from '../network/apiClient';
+import { endpoints } from '../network/endpoints';
 import type {
   Appointment,
   AppointmentStatus,
@@ -7,7 +7,7 @@ import type {
   BookAppointmentPayload,
   RescheduleAppointmentPayload,
   SlotAvailability,
-} from '../model/Appointment';
+} from '../features/appointments/model/Appointment';
 
 type AvailableSlotsResponse =
   | AvailableSlot[]

@@ -3,8 +3,8 @@ import type { Appointment } from '../../appointments/model/Appointment';
 import {
   appointmentService,
   AppointmentStatusAction,
-} from '../../appointments/service/appointmentService';
-import { doctorService } from '../service/doctorService';
+} from '../../../services/appointmentService';
+import { doctorService } from '../../../services/doctorService';
 
 export const useDoctorAppointmentDetailsViewModel = () => {
   const [appointment, setAppointment] = useState<Appointment | null>(null);

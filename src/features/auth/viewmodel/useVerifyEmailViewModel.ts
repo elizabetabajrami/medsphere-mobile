@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { authService } from "../service/authService";
+import { authService } from "../../../services/authService";
 
 export const useVerifyEmailViewModel = (email: string) => {
   const [code, setCode] = useState("");

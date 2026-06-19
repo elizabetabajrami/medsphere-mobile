@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import type { UserRole } from "../features/auth/model/AuthTypes";
-import { pushNotificationService } from "../features/notifications/service/pushNotificationService";
+import { pushNotificationService } from "../services/pushNotificationService";
 import { AuthNavigator } from "./AuthNavigator";
 import { DoctorNavigator } from "./DoctorNavigator";
 import { PatientNavigator } from "./PatientNavigator";

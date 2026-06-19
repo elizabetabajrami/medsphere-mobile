@@ -3,7 +3,7 @@ import { io, type Socket } from 'socket.io-client';
 import { notificationSocketUrl } from '../../../network/apiClient';
 import { getToken } from '../../../storage/tokenStorage';
 import type { NotificationItem } from '../model/Notification';
-import { notificationService } from '../service/notificationService';
+import { notificationService } from '../../../services/notificationService';
 import { getVisibleNotifications, getVisibleUnreadCount } from '../utils/notificationFilters';
 
 export const useNotificationsViewModel = () => {

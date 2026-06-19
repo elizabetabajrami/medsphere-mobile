@@ -3,7 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { notificationService } from './notificationService';
-import { isAppointmentBookedNotification } from '../utils/notificationFilters';
+import { isAppointmentBookedNotification } from '../features/notifications/utils/notificationFilters';
 
 let currentPushToken: string | null = null;
 
